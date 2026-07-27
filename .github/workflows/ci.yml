@@ -31,6 +31,7 @@ jobs:
         run: ruff check .
 
       - name: Type check
+        if: matrix.python-version == '3.12'
         run: mypy src
 
       - name: Test

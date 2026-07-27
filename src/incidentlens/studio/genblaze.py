@@ -199,7 +199,7 @@ def _manifest_lock() -> Any:
         )
     return ObjectLockConfig(
         retain_until=datetime.now(UTC) + timedelta(days=days),
-        mode=mode,  # type: ignore[arg-type]
+        mode=mode,
     )
 
 

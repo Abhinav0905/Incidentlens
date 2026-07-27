@@ -185,7 +185,7 @@ class InternalScene(CinematicScene):
         self._window = window
         self._trace = trace
         graph = stage_graph(trace.service, internals)
-        super().__init__(analysis, graph, self._stage_state, spec)  # type: ignore[arg-type]
+        super().__init__(analysis, graph, self._stage_state, spec)
 
     # camera: establish wide, track the pulse midway, land on the failure
     def _build_camera_track(self) -> CameraTrack:

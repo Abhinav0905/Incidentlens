@@ -135,6 +135,20 @@ def looks_like_logs(text: str) -> bool:
     return with_level >= max(1, len(lines) // 4)
 
 
+_SAFE_SERVICE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def safe_service_name(raw: str) -> str:
+    """A display name safe to put in a filesystem path or a service graph.
+
+    The visitor supplies this. It is never used to build a filename — the temp
+    file is a fixed ``input.log`` — but it does reach the architecture graph and
+    the rendered output, so strip anything path-like or exotic.
+    """
+    cleaned = _SAFE_SERVICE.sub("-", (raw or "").strip()).strip("-.")
+    return cleaned[:48] or "service"
+
+
 def parse_log_text(text: str, *, service: str = "service") -> list[Any]:
     """Turn pasted log text into telemetry events, via the live connector."""
     from incidentlens.connectors.logfile import LogFileConnector, LogSource
@@ -148,8 +162,10 @@ def parse_log_text(text: str, *, service: str = "service") -> list[Any]:
     import tempfile
     from pathlib import Path
 
+    service = safe_service_name(service)
     with tempfile.TemporaryDirectory(prefix="incidentlens-sandbox-") as tmp:
-        path = Path(tmp) / f"{service}.log"
+        # Constant filename: the visitor's service name must never shape a path.
+        path = Path(tmp) / "input.log"
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         from incidentlens.domain.models import ArchitectureGraph, ServiceNode
 
@@ -240,7 +256,7 @@ def synthesise_events(prompt: str) -> tuple[Any, list[Any]]:
     from openai import OpenAI
 
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    messages: list[dict[str, str]] = [
+    messages: list[Any] = [
         {"role": "system", "content": _SYSTEM},
         {"role": "user", "content": f"The incident to generate telemetry for: {prompt}"},
     ]
@@ -255,7 +271,7 @@ def synthesise_events(prompt: str) -> tuple[Any, list[Any]]:
                 max_tokens=SYNTH_MAX_TOKENS,
                 temperature=0.7,
                 response_format={"type": "json_object"},
-                messages=messages,  # type: ignore[arg-type]
+                messages=messages,
             )
         except Exception as exc:  # noqa: BLE001 - surface provider errors as messages
             raise SandboxError(f"The model call failed: {type(exc).__name__}") from exc
@@ -365,7 +381,12 @@ def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
     Anything malformed is dropped rather than trusted: unknown services, bad
     timestamps and unparseable events cannot reach the engine.
     """
-    from incidentlens.domain.models import ArchitectureGraph, ServiceNode, TelemetryEvent
+    from incidentlens.domain.models import (
+        ArchitectureGraph,
+        ServiceNode,
+        SourceType,
+        TelemetryEvent,
+    )
 
     raw_services = payload.get("services") or []
     if not raw_services:
@@ -401,12 +422,21 @@ def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
             when = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
         except (TypeError, ValueError):
             when = base + timedelta(seconds=45 * index)
+        raw_kind = str(raw.get("source_type") or "log")
+        try:
+            kind = SourceType(raw_kind)
+        except ValueError:
+            allowed = ", ".join(sorted(s.value for s in SourceType))
+            dropped.append(
+                f"{ident}: source_type {raw_kind!r} is not one of {allowed}"
+            )
+            continue
         attributes = raw.get("attributes")
         try:
             events.append(
                 TelemetryEvent(
                     id=ident,
-                    source_type=str(raw.get("source_type") or "log"),
+                    source_type=kind,
                     source=str(raw["source"]),
                     timestamp=when,
                     detail=str(raw.get("detail") or "").strip()[:600],
@@ -455,5 +485,6 @@ __all__ = [
     "looks_like_logs",
     "parse_log_text",
     "quota_state",
+    "safe_service_name",
     "synthesise_events",
 ]

@@ -137,12 +137,13 @@ def sandbox_reconstruct(request: SandboxRequest, http: Request) -> dict[str, obj
     synthesised = False
     try:
         if request.logs.strip():
-            events = sandbox.parse_log_text(request.logs, service=request.service or "service")
+            service = sandbox.safe_service_name(request.service)
+            events = sandbox.parse_log_text(request.logs, service=service)
             from incidentlens.domain.models import ArchitectureGraph, ServiceNode
 
             architecture = ArchitectureGraph(
                 system="pasted-logs",
-                services=[ServiceNode(name=request.service or "service", user_facing=True)],
+                services=[ServiceNode(name=service, user_facing=True)],
             )
         else:
             client = http.client.host if http.client else "unknown"

@@ -132,7 +132,7 @@ def build_world(architecture: ArchitectureGraph) -> World:
                     dst=dep,
                     points=pts,
                     length=_polyline_length(pts),
-                    key=tuple(sorted((svc.name, dep))),  # type: ignore[arg-type]
+                    key=tuple(sorted((svc.name, dep))),
                 )
             )
 

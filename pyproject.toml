@@ -100,7 +100,44 @@ select = ["E", "F", "I", "B", "UP"]
 "src/incidentlens/studio/graphview.py" = ["E501"]
 
 [tool.mypy]
-python_version = "3.11"
+# 3.12, not 3.11: numpy >= 2.3 ships stubs written with PEP 695 `type` statements,
+# and targeting 3.11 made mypy reject them as a syntax error inside a dependency —
+# which aborted the run before any of our own code was checked, so CI was red while
+# telling us nothing. The package still supports 3.11 at runtime; only the type
+# target moved.
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+
+# Strict everywhere except the renderer and the CLI, which predate the type gate
+# and are being annotated incrementally. Listing them here rather than excluding
+# them keeps them checked for real errors — only the "everything must be annotated"
+# rules are relaxed, so the gate stays meaningful and the backlog stays visible.
+[[tool.mypy.overrides]]
+module = [
+  "incidentlens.cli",
+  "incidentlens.live",
+  "incidentlens.connectors.internals_scan",
+  "incidentlens.connectors.synthetic",
+  "incidentlens.engines.internal_trace",
+  "incidentlens.studio.render",
+  "incidentlens.studio.graphview",
+  "incidentlens.studio.cinema.*",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_any_generics = false
+disallow_untyped_calls = false
+warn_return_any = false
+
+# Known typing debt in the renderer, listed by code so it stays visible:
+#   attr-defined  Pillow moved Image.LANCZOS to Image.Resampling.LANCZOS
+#   index         tuple(sorted(pair)) widens to tuple[str, ...] against a
+#                 dict[tuple[str, str], float] key
+#   arg-type      the font loader returns object rather than a Pillow font union
+# The renderer is covered by pixel-level tests, so these are scheduled rather than
+# rushed. Everything outside this list is checked strictly.
+[[tool.mypy.overrides]]
+module = ["incidentlens.studio.cinema.*"]
+disable_error_code = ["attr-defined", "index", "arg-type"]

@@ -10,7 +10,7 @@ closing claim. The replay excerpt is your only flexible segment — trim it, nev
 ## One-line pitch
 
 IncidentLens reads a Python service's source and its logs, reconstructs a production
-failure down to the method that raised, and renders it as a narrated replay whose every
+failure down to the logged module and a static candidate method, and renders it as a narrated replay whose every
 claim cites a log line — orchestrated through Genblaze and served from Backblaze B2 with
 provenance you can verify.
 
@@ -35,10 +35,10 @@ failure that *no dashboard catches* is the argument for why the tool should exis
 | --- | --- | --- |
 | 0:00–0:12 | A wall of raw log lines scrolling | "At 2am this is what you get. Somewhere in here a service is failing, and nothing tells you which function." |
 | 0:12–0:30 | The hosted URL. The incident gallery, thumbnails streaming from B2 | "IncidentLens keeps every reconstructed incident as a media bundle in Backblaze B2 — video, analysis, provenance." |
-| 0:30–1:00 | `incidentlens analyze --config demo/model-id-typo/incidentlens.config.json` running on **raw log files**. The briefing appears in seconds | "No agents, no instrumentation. It reads log files and the source tree. Seconds later: the origin service, the propagation chain, and the failing module." |
+| 0:30–1:00 | `incidentlens analyze --config demo/model-id-typo/incidentlens.config.json --analysis-only` running on **raw log files**. The briefing appears in under a second | "No agents, no instrumentation. It reads log files and the source tree. Seconds later: the origin service, the propagation chain, and the failing module." |
 | 1:00–1:35 | The `agentic-retry-exhaustion` excerpt. Architecture → module → `AgentNode.__call__` in red | "This one returns HTTP 200. Success rate holds at 99.6%. But salvaged partial answers went from 0.3% to 44.8% — and it lands on the exact method." |
-| 1:35–2:05 | The Genblaze manifest: 14 `openai-tts` steps, `gpt-4o-mini-tts`, SHA-256. Then extract the manifest **from inside the MP4** and verify | "Genblaze orchestrates every narration beat and records provider, model and hash. The manifest is embedded in the video — download it anywhere and it still verifies against the analysis that produced it." |
-| 2:05–2:30 | The B2 bucket: hierarchical keys, the public URL opening in a signed-out window. A delete attempt returning **403** under Object Lock | "B2 is the library the product reads from, not a dead drop. And the manifest is immutable — six months from now you can still prove the replay was not edited." |
+| 1:35–2:05 | The Genblaze manifest: 14 `openai-tts` steps, `gpt-4o-mini-tts`, SHA-256. Then extract the manifest **from inside the MP4** and verify | "Genblaze orchestrates every narration beat and records provider, model and hash. The manifest is embedded in the video — download it anywhere and it still verifies." |
+| 2:05–2:30 | The B2 bucket: hierarchical keys, the public URL opening in a signed-out window. A delete attempt returning **403** under Object Lock | "B2 is the library the product reads from, not a dead drop. And the provenance manifest is under Object Lock — it cannot be deleted or overwritten until the retention date, so the record of what produced this film cannot be quietly rewritten." |
 | 2:30–2:45 | The `unknown — confidence 0.00` row, and the missing-evidence list | "And when the telemetry cannot settle a question, it says so. That is the difference between a tool you trust at 2am and one you don't." |
 
 ## Rules for the edit
@@ -58,7 +58,7 @@ failure that *no dashboard catches* is the argument for why the tool should exis
 
 ```bash
 # Live reconstruction from raw log files (fast — safe to run on camera)
-incidentlens analyze --config demo/model-id-typo/incidentlens.config.json --narration template
+incidentlens analyze --config demo/model-id-typo/incidentlens.config.json --analysis-only
 
 # Full render + Genblaze narration + publish to B2 (slow — pre-render this)
 incidentlens studio agentic-retry-exhaustion \
@@ -68,9 +68,12 @@ incidentlens studio agentic-retry-exhaustion \
   --profile high --upload-genblaze-b2
 
 # Verify the manifest embedded inside the MP4
-python -c "from genblaze_core.media import Mp4Handler; \
-m = Mp4Handler().extract('demo/gallery/agentic-retry-exhaustion/replay.mp4'); \
+python -c "from pathlib import Path; from genblaze_core.media import Mp4Handler; \
+m = Mp4Handler().extract(Path('demo/gallery/agentic-retry-exhaustion/replay.mp4')); \
 print(m.verify(), m.canonical_hash)"
+# extract() requires a Path, not a str — see genblaze#225.
+# verify() confirms the manifest's own integrity; the recorded analysis digest is a
+# separate field, so comparing it to an analysis document is its own step.
 ```
 
 ## Submission checklist

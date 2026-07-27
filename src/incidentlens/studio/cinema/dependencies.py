@@ -277,7 +277,7 @@ class ModuleScene(CinematicScene):
         self._view = view
         self._window = window
         self._module_state = ModuleTimeline(view, window)
-        super().__init__(analysis, view.graph, self._module_state, spec)  # type: ignore[arg-type]
+        super().__init__(analysis, view.graph, self._module_state, spec)
 
     def _build_camera_track(self) -> CameraTrack:
         start, fail_beat, end = self._window

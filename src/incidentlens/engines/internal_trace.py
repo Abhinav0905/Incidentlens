@@ -107,16 +107,16 @@ def trace_internals(
     failing: str | None = None
     failing_detail = ""
     for event in window_events:
-        stage = _stage_for_logger(_event_logger(event), internals)
-        if stage is None:
+        matched = _stage_for_logger(_event_logger(event), internals)
+        if matched is None:
             continue
         level = str(event.attributes.get("level", "")).upper()
-        evidence.setdefault(stage, []).append(event.id)
+        evidence.setdefault(matched, []).append(event.id)
         if level in ERROR_LEVELS and failing is None:
-            failing = stage
+            failing = matched
             failing_detail = event.detail
-        elif stage not in details:
-            details[stage] = event.detail
+        elif matched not in details:
+            details[matched] = event.detail
 
     entry = internals.entry_stage()
     path: list[str] = []
@@ -130,21 +130,21 @@ def trace_internals(
     on_path = set(path)
     traces: list[InternalStageTrace] = []
     for stage in internals.stages:
-        name = stage.name
-        ids = evidence.get(name, [])
-        if name == failing:
+        stage_name = stage.name
+        ids = evidence.get(stage_name, [])
+        if stage_name == failing:
             status = StageStatus.FAILED
             detail = failing_detail
-        elif name in on_path:
+        elif stage_name in on_path:
             if ids:
                 status = StageStatus.OK
-                detail = details.get(name, "reported telemetry during the traversal")
+                detail = details.get(stage_name, "reported telemetry during the traversal")
             else:
                 status = StageStatus.INFERRED
                 detail = "on the traversed path; no telemetry of its own"
         elif ids:
             status = StageStatus.OK
-            detail = details.get(name, "")
+            detail = details.get(stage_name, "")
         elif failing is not None:
             status = StageStatus.DORMANT
             detail = "not on the traced request path"
@@ -152,7 +152,7 @@ def trace_internals(
             status = StageStatus.UNKNOWN
             detail = ""
         traces.append(
-            InternalStageTrace(stage=name, status=status, detail=detail, evidence_ids=ids)
+            InternalStageTrace(stage=stage_name, status=status, detail=detail, evidence_ids=ids)
         )
 
     # Stages strictly after the failure on the path are not-reached, not dormant.

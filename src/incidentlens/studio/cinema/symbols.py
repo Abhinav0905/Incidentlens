@@ -246,7 +246,7 @@ class SymbolScene(CinematicScene):
         self._trace = trace
         self._window = window
         self._symbol_state = SymbolTimeline(view, window)
-        super().__init__(analysis, view.graph, self._symbol_state, spec)  # type: ignore[arg-type]
+        super().__init__(analysis, view.graph, self._symbol_state, spec)
 
     # camera: establish wide over the call graph, push toward the failing
     # symbol, land on it as it turns red

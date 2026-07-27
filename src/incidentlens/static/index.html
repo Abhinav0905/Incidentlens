@@ -29,7 +29,7 @@
     <section class="intro">
       <div class="intro-main">
         <p class="eyebrow">Evidence-backed incident reconstruction</p>
-        <h1 class="intro-h">Find the method that broke production,
+        <h1 class="intro-h">Find the code that broke production,
           from the logs you already have.</h1>
         <p class="intro-lede">
           At 2am you get a wall of log lines and a service map. Neither tells you
@@ -38,8 +38,9 @@
         </p>
         <p class="intro-body">
           IncidentLens reads a Python service's source and its log files, reconstructs
-          the failure down to the method that raised, and renders it as a narrated
-          replay where every claim cites a log line. Each conclusion is labelled
+          the failure down to the module it was logged in and a static candidate
+          method inside it, and renders that as a narrated replay where every claim
+          cites a log line. Each conclusion is labelled
           <span class="badge confirmed">confirmed</span>
           <span class="badge inferred">inferred</span> or
           <span class="badge unknown">unknown</span> — and it refuses to name a cause
@@ -178,7 +179,7 @@
       <div id="pane-paste" class="pane">
         <label for="sb-logs">
           Log lines from any service. Python&nbsp;logging, Spring, ISO timestamps and
-          JSON lines are all understood. Nothing is uploaded and no model is involved.
+          JSON lines are all understood. Sent to this server for processing and not retained; no model sees them. Please do not paste secrets, customer data or proprietary logs.
         </label>
         <textarea id="sb-logs" rows="7" spellcheck="false"
           placeholder="2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed&#10;2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : POST /v1/charge 502 in 3011 ms"></textarea>

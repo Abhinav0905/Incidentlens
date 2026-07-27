@@ -101,9 +101,9 @@ class _Visitor(ast.NodeVisitor):
                             self.scan.graph_nodes.add(dst)
 
         elif attr == "add_node" and node.args:
-            name = _str_arg(node.args[0])
-            if name:
-                self.scan.graph_nodes.add(name)
+            node_name = _str_arg(node.args[0])
+            if node_name:
+                self.scan.graph_nodes.add(node_name)
 
         elif attr == "add_middleware" and node.args:
             cls = node.args[0]

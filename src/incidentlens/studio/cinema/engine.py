@@ -45,6 +45,7 @@ from incidentlens.studio.cinema.world import (
     CRITICAL_LIFT,
     WARNING_LIFT,
     Edge3D,
+    Node3D,
     World,
     build_world,
     point_along,
@@ -357,7 +358,7 @@ class CinematicScene:
             order.append((dz, name))
         order.sort(reverse=True)
 
-        labels: list[tuple[int, float, object, str, float]] = []
+        labels: list[tuple[int, float, Node3D, str, float]] = []
         eye = proj.state.eye()
         for dz_center, name in order:
             if dz_center <= 0.3:

@@ -6,7 +6,7 @@ from importlib.resources import files
 try:  # Python 3.11+
     from importlib.resources.abc import Traversable
 except ImportError:  # pragma: no cover - Python 3.10
-    from importlib.abc import Traversable  # type: ignore[no-redef]
+    from importlib.abc import Traversable
 
 from incidentlens.connectors.base import TelemetryConnector
 from incidentlens.domain.models import ArchitectureGraph, ScenarioInfo, TelemetryEvent

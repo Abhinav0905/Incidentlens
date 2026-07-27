@@ -206,6 +206,13 @@ def main() -> None:
     analyze.add_argument("--config", default=None,
                          help="incidentlens.config.json (overrides --logs/--arch)")
     analyze.add_argument("--out-dir", default="incidentlens-videos")
+    analyze.add_argument(
+        "--analysis-only",
+        action="store_true",
+        help="Reconstruct and write the briefing, analysis JSON and diagrams, but "
+        "skip the video. Completes in seconds instead of minutes — use this when "
+        "you want the answer rather than the film.",
+    )
     _add_video_flags(analyze, voice_default="auto")
 
     # ------------------------------------------------------------------ watch
@@ -384,6 +391,34 @@ def main() -> None:
             events = LogFileConnector(sources, architecture).fetch_events()
             if not events:
                 sys.exit("no log lines parsed — check the paths passed via --logs")
+
+            if args.analysis_only:
+                from incidentlens.live import analyze_events, write_companions
+
+                try:
+                    analysis = analyze_events(events, architecture)
+                except NoIncidentDetected as exc:
+                    sys.exit(f"no incident found in the supplied logs: {exc}")
+                if code_graphs:
+                    from incidentlens.connectors.code_graph import enrich_trace_with_code
+
+                    enrich_trace_with_code(analysis, code_graphs)
+                out_dir.mkdir(parents=True, exist_ok=True)
+                briefing, analysis_json = write_companions(
+                    analysis, out_dir / f"{analysis.incident_id}.mp4"
+                )
+                trace = analysis.internal_trace
+                print(f"incident:  {analysis.incident_id} — {analysis.title}")
+                print(f"evidence:  {len(analysis.evidence)} items")
+                if trace is not None:
+                    print(f"module:    {trace.failing_module}")
+                    if trace.failing_symbol:
+                        print(f"candidate: {trace.failing_symbol}  (static, not a stack frame)")
+                print(f"briefing:  {briefing}")
+                print(f"analysis:  {analysis_json}")
+                print("(--analysis-only: no video rendered)")
+                return
+
             try:
                 analysis, video = render_incident(
                     events, architecture, out_dir, options,

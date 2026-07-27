@@ -394,3 +394,44 @@ def test_ui_sample_logs_can_actually_attribute_a_cause() -> None:
     assert any(k in text for k in CHANGE_KEYWORDS), (
         "the sample must contain a change keyword or the demo shows an unexplained cause"
     )
+
+
+def test_service_name_cannot_shape_a_path() -> None:
+    """The visitor supplies this string; it must never build a filename."""
+    from incidentlens import sandbox
+
+    assert sandbox.safe_service_name("../../etc/passwd") == "etc-passwd"
+    assert sandbox.safe_service_name("a/b/c.log") == "a-b-c.log"
+    assert sandbox.safe_service_name("") == "service"
+    assert sandbox.safe_service_name("   ..   ") == "service"
+    assert len(sandbox.safe_service_name("x" * 200)) <= 48
+    assert sandbox.safe_service_name("payment-api") == "payment-api"
+
+
+def test_paste_uses_a_constant_temp_filename(monkeypatch: pytest.MonkeyPatch) -> None:
+    from incidentlens import sandbox
+    from incidentlens.connectors import logfile
+
+    seen: list[str] = []
+    real = logfile.LogSource
+
+    def spy(*args: object, **kwargs: object) -> object:
+        seen.append(str(kwargs.get("pattern", "")))
+        return real(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(logfile, "LogSource", spy)
+    sandbox.parse_log_text(
+        "2026-07-27 09:00:00 ERROR app.x : boom\n2026-07-27 09:00:01 ERROR app.x : boom",
+        service="../../evil",
+    )
+    assert seen and seen[0].endswith("/input.log"), seen
+
+
+def test_ui_does_not_claim_logs_stay_local() -> None:
+    """The browser POSTs pasted logs to the server, so the UI must not say
+    'nothing is uploaded'."""
+    from pathlib import Path
+
+    html = Path("src/incidentlens/static/index.html").read_text(encoding="utf-8")
+    assert "Nothing is uploaded" not in html
+    assert "Sent to this server" in html

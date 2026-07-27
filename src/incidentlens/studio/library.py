@@ -158,7 +158,7 @@ def publish_bundle(
         keys.append(key)
 
     video_key = f"{prefix}/replay.mp4"
-    url = backend.get_durable_url(video_key)
+    url: str = backend.get_durable_url(video_key)
     trace = analysis.internal_trace
     entry = {
         "incident_id": analysis.incident_id,
@@ -191,7 +191,8 @@ def write_catalog(backend: Any, entries: list[dict[str, Any]]) -> str:
         content_type="application/x-ndjson",
         metadata={"incident-count": str(len(entries))},
     )
-    return backend.get_durable_url(CATALOG_KEY)
+    catalog_url: str = backend.get_durable_url(CATALOG_KEY)
+    return catalog_url
 
 
 def read_catalog(backend: Any) -> list[dict[str, Any]]:
