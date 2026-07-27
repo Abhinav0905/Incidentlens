@@ -24,7 +24,67 @@
   </header>
 
   <main>
-    <!-- The product first. Forms come after it. -->
+    <!-- Orientation for a first-time visitor: the problem, the answer, the stack,
+         and three ways in. Everything below is the product itself. -->
+    <section class="intro">
+      <div class="intro-main">
+        <p class="eyebrow">Evidence-backed incident reconstruction</p>
+        <h1 class="intro-h">Find the method that broke production,
+          from the logs you already have.</h1>
+        <p class="intro-lede">
+          At 2am you get a wall of log lines and a service map. Neither tells you
+          which <em>function</em> failed, what it took down with it, or which
+          questions the telemetry cannot answer.
+        </p>
+        <p class="intro-body">
+          IncidentLens reads a Python service's source and its log files, reconstructs
+          the failure down to the method that raised, and renders it as a narrated
+          replay where every claim cites a log line. Each conclusion is labelled
+          <span class="badge confirmed">confirmed</span>
+          <span class="badge inferred">inferred</span> or
+          <span class="badge unknown">unknown</span> — and it refuses to name a cause
+          it cannot evidence. No agents, no instrumentation: a log file is the whole
+          integration surface.
+        </p>
+        <div class="cta-row">
+          <a href="/gallery" class="cta cta-key">
+            Watch the narrated replays
+            <span class="cta-sub">3-D films, streamed from Backblaze B2</span>
+          </a>
+          <a href="#sandbox" class="cta" data-seg="paste">
+            Run it on your own logs
+            <span class="cta-sub">paste real log lines · no key needed</span>
+          </a>
+          <a href="#sandbox" class="cta" data-seg="prompt">
+            Describe an incident
+            <span class="cta-sub">a model writes the telemetry, the engine reasons</span>
+          </a>
+        </div>
+      </div>
+
+      <aside class="intro-tech" aria-label="How it is built">
+        <p class="eyebrow">Built with</p>
+        <dl>
+          <dt>Backblaze B2</dt>
+          <dd>The incident library the app reads from — media, provenance, a
+            queryable catalog, and manifests held immutable under Object Lock.</dd>
+          <dt>Genblaze</dt>
+          <dd>Orchestrates narration synthesis and records verifiable provenance,
+            embedded inside the MP4 itself.</dd>
+          <dt>OpenAI</dt>
+          <dd><code>gpt-4o</code> writes the narration, <code>gpt-4o-mini-tts</code>
+            speaks it. Full list in <code>PROVIDERS.md</code>.</dd>
+          <dt>Python <code>ast</code></dt>
+          <dd>The module and function call graph. Nothing is imported and nothing
+            is executed.</dd>
+          <dt>Deterministic engine</dt>
+          <dd>Origin, propagation, blast radius and confidence. <strong>No model
+            is involved in any conclusion.</strong></dd>
+        </dl>
+      </aside>
+    </section>
+
+    <!-- The product. Forms come after it. -->
     <section id="stage-panel" class="hidden" aria-label="Incident replay">
       <div class="incident-head">
         <div>
@@ -84,12 +144,22 @@
       <section id="evidence" class="tab" role="tabpanel"></section>
     </section>
 
-    <p class="notice">
-      The replay is drawn <strong>live in your browser</strong> from the analysis — it is
-      not a recording. For the narrated films that zoom from the service map
-      down to the failing method, open the <a href="/gallery">incident library</a>:
-      each streams from Backblaze&nbsp;B2 with a Genblaze manifest you can verify.
-    </p>
+    <!-- The B2 library, present on the landing page rather than only linked. -->
+    <section class="b2strip" id="b2strip">
+      <div class="b2strip-copy">
+        <p class="eyebrow">Pre-rendered · Backblaze B2</p>
+        <h2>The narrated films live in object storage</h2>
+        <p>
+          The replay above is drawn <strong>live in your browser</strong> from the
+          analysis — it is not a recording. The narrated 3&#8209;D films are different:
+          they zoom from the service map down to the failing method, and each one
+          streams straight from a public Backblaze&nbsp;B2 bucket with a Genblaze
+          manifest embedded in the MP4 that you can verify.
+        </p>
+        <a href="/gallery" class="cta cta-key">Open the incident library</a>
+      </div>
+      <div class="b2strip-posters" id="b2strip-posters" aria-label="Recent incident replays"></div>
+    </section>
 
     <section id="sandbox" class="sandbox">
       <div class="sandbox-head">

@@ -543,6 +543,7 @@ function wireEvents() {
 document.addEventListener("DOMContentLoaded", () => {
   wireEvents();
   wireSandbox();
+  wireIntro();
   // Reconstruct the first scenario immediately. A visitor should land on the
   // product working, not on an empty state asking them to press a button.
   loadScenarios().then(() => {
@@ -658,4 +659,52 @@ function wireSandbox() {
         `${q.daily_remaining} of ${q.daily_limit} generated scenarios left today.`;
     })
     .catch(() => {});
+}
+
+/* --------------------------------------------------------------- intro ---
+ * The hero's entry points: jump to the sandbox with the right tab already
+ * selected, and show real poster frames from the B2 catalog so the object
+ * storage is visible on the landing page rather than only linked.
+ */
+
+function wireIntro() {
+  document.querySelectorAll(".cta[data-seg]").forEach((link) => {
+    link.addEventListener("click", () => {
+      const want = link.dataset.seg === "prompt" ? "tab-prompt" : "tab-paste";
+      const button = $(want);
+      if (button && !button.classList.contains("active")) button.click();
+    });
+  });
+
+  const rail = $("b2strip-posters");
+  if (!rail) return;
+  fetchJson("/api/v1/incidents")
+    .then((data) => {
+      const picks = (data.incidents || [])
+        .filter((i) => i.prefix.startsWith("Hary_"))
+        .slice(0, 3);
+      if (!picks.length) {
+        $("b2strip").classList.add("hidden");
+        return;
+      }
+      rail.textContent = "";
+      picks.forEach((inc) => {
+        const a = document.createElement("a");
+        a.href = "/gallery";
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.src = inc.poster_url;
+        img.alt = inc.title || inc.prefix;
+        const label = document.createElement("span");
+        label.className = "poster-label";
+        label.textContent = inc.failing_symbol || inc.failing_module || inc.prefix;
+        a.append(img, label);
+        rail.appendChild(a);
+      });
+    })
+    .catch(() => {
+      // Object storage unreachable: hide the strip rather than show broken frames.
+      const strip = $("b2strip");
+      if (strip) strip.classList.add("hidden");
+    });
 }
