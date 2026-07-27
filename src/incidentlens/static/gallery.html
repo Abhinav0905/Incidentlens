@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IncidentLens — incident library</title>
+<style>
+  :root {
+    --bg: #0b0f16; --panel: #131a26; --panel-2: #1a2330; --line: #263243;
+    --text: #e6edf6; --dim: #8b9bb0; --accent: #37d7c2; --warn: #f0b429;
+    --crit: #f2603c; --ok: #4ec9a5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  header {
+    padding: 28px 32px 22px; border-bottom: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline;
+  }
+  h1 { margin: 0; font-size: 22px; letter-spacing: -0.2px; }
+  header p { margin: 0; color: var(--dim); font-size: 14px; }
+  .src { margin-left: auto; font-size: 12px; color: var(--dim); }
+  .src code { color: var(--accent); }
+  main { padding: 26px 32px 60px; max-width: 1180px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em;
+       color: var(--dim); margin: 30px 0 14px; font-weight: 600; }
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card img, .card video { width: 100%; aspect-ratio: 16/9; object-fit: cover;
+                            display: block; background: #000; cursor: pointer; }
+  .card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 9px; }
+  .card h3 { margin: 0; font-size: 15px; }
+  .lands { font-size: 12.5px; color: var(--accent); word-break: break-all; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--dim);
+  }
+  .chip.confirmed { color: var(--ok); border-color: #23503f; }
+  .chip.inferred  { color: var(--warn); border-color: #4d3b12; }
+  .chip.unknown   { color: var(--dim); border-style: dashed; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  button, a.btn {
+    font: inherit; font-size: 12.5px; padding: 5px 11px; border-radius: 6px;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    cursor: pointer; text-decoration: none;
+  }
+  button:hover, a.btn:hover { border-color: var(--accent); color: var(--accent); }
+  .prov {
+    margin-top: 4px; padding: 11px 12px; border-radius: 8px; background: #0e141d;
+    border: 1px solid var(--line); font-size: 12px; display: none;
+  }
+  .prov.open { display: block; }
+  .prov dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
+  .prov dt { color: var(--dim); }
+  .prov dd { margin: 0; word-break: break-all; }
+  .empty { color: var(--dim); padding: 40px 0; }
+  footer { padding: 22px 32px; border-top: 1px solid var(--line);
+           color: var(--dim); font-size: 12.5px; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f6f8fb; --panel:#fff; --panel-2:#eef2f7; --line:#d7dfea;
+            --text:#16202e; --dim:#5c6b7f; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Incident library</h1>
+    <p>Reconstructed incidents, served from Backblaze B2 with verifiable provenance.</p>
+  </div>
+  <div class="src">reading <code id="src">…</code></div>
+</header>
+
+<main>
+  <div id="out"><p class="empty">Loading the catalog from Backblaze B2…</p></div>
+</main>
+
+<footer>
+  Every replay is rendered from a deterministic analysis — the visuals cannot show
+  anything the evidence did not support. Narration is model-written and spoken;
+  each incident carries a Genblaze manifest embedded in the MP4 itself.
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function chip(text, cls) {
+  const s = document.createElement('span');
+  s.className = 'chip' + (cls ? ' ' + cls : '');
+  s.textContent = text;
+  return s;
+}
+
+function card(inc) {
+  const el = document.createElement('article');
+  el.className = 'card';
+
+  const img = document.createElement('img');
+  img.loading = 'lazy';
+  img.alt = inc.title || inc.prefix;
+  img.src = inc.poster_url;
+  img.onclick = () => {
+    const v = document.createElement('video');
+    v.src = inc.video_url; v.controls = true; v.autoplay = true; v.preload = 'metadata';
+    img.replaceWith(v);
+  };
+  el.appendChild(img);
+
+  const body = document.createElement('div');
+  body.className = 'body';
+
+  const h = document.createElement('h3');
+  h.textContent = inc.prefix.split('/').pop().replace(/-/g, ' ');
+  body.appendChild(h);
+
+  if (inc.failing_symbol || inc.failing_module) {
+    const l = document.createElement('div');
+    l.className = 'lands mono';
+    l.textContent = '↳ ' + (inc.failing_symbol || inc.failing_module);
+    body.appendChild(l);
+  }
+
+  const facts = document.createElement('div');
+  facts.className = 'facts';
+  if (inc.evidence_count != null) facts.appendChild(chip(inc.evidence_count + ' evidence'));
+  if (inc.blast_radius != null)   facts.appendChild(chip('blast radius ' + inc.blast_radius));
+  if (inc.missing_evidence_count) facts.appendChild(chip(inc.missing_evidence_count + ' gaps'));
+  (inc.hypothesis_statuses || []).forEach((s) => facts.appendChild(chip(s, s)));
+  body.appendChild(facts);
+
+  const row = document.createElement('div');
+  row.className = 'row';
+  const prov = document.createElement('div');
+  prov.className = 'prov';
+
+  const pbtn = document.createElement('button');
+  pbtn.textContent = 'Verify provenance';
+  pbtn.onclick = async () => {
+    prov.classList.toggle('open');
+    if (prov.dataset.loaded) return;
+    prov.textContent = 'Reading Genblaze manifests from B2…';
+    try {
+      const r = await fetch('/api/v1/incidents/' + encodeURI(inc.prefix) + '/provenance');
+      const d = await r.json();
+      prov.textContent = '';
+      for (const [kind, p] of Object.entries(d.provenance || {})) {
+        const dl = document.createElement('dl');
+        const add = (k, v) => {
+          const dt = document.createElement('dt'); dt.textContent = k;
+          const dd = document.createElement('dd'); dd.className = 'mono'; dd.textContent = v;
+          dl.append(dt, dd);
+        };
+        add(kind + ' steps', p.step_count);
+        if (p.providers?.length)  add('provider', p.providers.join(', '));
+        if (p.models?.length)     add('model', p.models.join(', '));
+        if (p.modalities?.length) add('modality', p.modalities.join(', '));
+        if (p.step_types?.length) add('step type', p.step_types.join(', '));
+        if (p.canonical_hash)     add('canonical hash', p.canonical_hash);
+        prov.appendChild(dl);
+        const hr = document.createElement('div'); hr.style.height = '8px';
+        prov.appendChild(hr);
+      }
+      prov.dataset.loaded = '1';
+    } catch (e) {
+      prov.textContent = 'Could not read the manifests.';
+    }
+  };
+  row.appendChild(pbtn);
+
+  const links = [
+    ['briefing.md', 'Briefing'],
+    ['analysis.json', 'Analysis'],
+    ['code-graph.mmd', 'Call graph'],
+  ];
+  links.forEach(([f, label]) => {
+    if (!inc.files || !inc.files[f]) return;
+    const a = document.createElement('a');
+    a.className = 'btn'; a.href = inc.files[f]; a.target = '_blank'; a.textContent = label;
+    row.appendChild(a);
+  });
+
+  body.appendChild(row);
+  body.appendChild(prov);
+  el.appendChild(body);
+  return el;
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/v1/incidents');
+    const d = await r.json();
+    $('src').textContent = (d.source || '').replace(/^https?:\/\//, '');
+    const out = $('out');
+    out.textContent = '';
+    if (!d.count) {
+      out.innerHTML = '<p class="empty">No incidents published to object storage yet.</p>';
+      return;
+    }
+    const series = d.incidents.filter((i) => i.prefix.startsWith('Hary_'));
+    const others = d.incidents.filter((i) => !i.prefix.startsWith('Hary_'));
+    const section = (title, list) => {
+      if (!list.length) return;
+      const h = document.createElement('h2'); h.textContent = title;
+      const g = document.createElement('div'); g.className = 'grid';
+      list.forEach((i) => g.appendChild(card(i)));
+      out.append(h, g);
+    };
+    section('One platform, ' + series.length + ' failures', series);
+    section('Other architectures', others);
+  } catch (e) {
+    $('out').innerHTML = '<p class="empty">Could not reach the catalog.</p>';
+  }
+}
+load();
+</script>
+</body>
+</html>

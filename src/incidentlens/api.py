@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from incidentlens import __version__
+from incidentlens import __version__, gallery
 from incidentlens.connectors.synthetic import SyntheticConnector, available_scenarios
 from incidentlens.domain.errors import NoIncidentDetected
 from incidentlens.domain.models import IncidentAnalysis, ScenarioInfo
@@ -67,3 +67,54 @@ def analyze(request: AnalyzeRequest) -> IncidentAnalysis:
         return service.analyze()
     except NoIncidentDetected as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+# --------------------------------------------------------------- incident library
+#
+# The published library lives in Backblaze B2. These routes read it back out —
+# the catalog, the media URLs, and the Genblaze provenance for each incident.
+# The bucket is public, so this service holds no B2 credentials.
+
+
+@app.get("/gallery")
+def gallery_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "gallery.html")
+
+
+@app.get("/api/v1/incidents")
+def incidents() -> dict[str, object]:
+    """The incident catalog, read from B2."""
+    entries = gallery.fetch_catalog()
+    return {
+        "source": gallery.public_base(),
+        "count": len(entries),
+        "incidents": entries,
+    }
+
+
+@app.get("/api/v1/incidents/{prefix:path}/provenance")
+def incident_provenance(prefix: str) -> dict[str, object]:
+    """Genblaze manifests for one incident, summarised."""
+    if gallery.find_incident(prefix) is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {prefix!r}")
+    summary = gallery.fetch_provenance(prefix)
+    if summary is None:
+        raise HTTPException(
+            status_code=502, detail="provenance manifests unreachable in object storage"
+        )
+    return {"prefix": prefix, "provenance": summary}
+
+
+@app.get("/api/v1/incidents/{prefix:path}")
+def incident(prefix: str) -> dict[str, object]:
+    """One incident bundle: media URLs plus the files published beside it."""
+    entry = gallery.find_incident(prefix)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {prefix!r}")
+    return {
+        "incident": entry,
+        "files": {
+            name: {"label": label, "url": entry["files"][name]}
+            for name, label in gallery.BUNDLE_FILES.items()
+        },
+    }
