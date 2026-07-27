@@ -23,65 +23,8 @@
     </div>
   </header>
 
-  <p class="notice">
-    This page reconstructs the incident <strong>live in your browser</strong> — the
-    animation above is drawn from the analysis, not a recording. For the narrated
-    3&#8209;D films that zoom from the service map down to the failing method, open the
-    <a href="/gallery">incident library</a>; each one streams from Backblaze&nbsp;B2 with
-    a Genblaze manifest you can verify.
-  </p>
-
-  <section id="sandbox" class="sandbox">
-    <div class="sandbox-head">
-      <h2>Try it on an incident of your own</h2>
-      <p>
-        The bundled scenarios are ours. These two inputs are yours — the engine treats
-        them identically, and reaches its own conclusions either way.
-      </p>
-    </div>
-
-    <div class="sandbox-tabs" role="tablist">
-      <button id="tab-paste" class="tab active" role="tab">Paste real log lines</button>
-      <button id="tab-prompt" class="tab" role="tab">Describe an incident</button>
-    </div>
-
-    <div id="pane-paste" class="pane">
-      <label for="sb-logs">
-        Log lines from any service. Python&nbsp;logging, Spring, ISO timestamps and JSON
-        lines are all understood. Nothing is uploaded anywhere and no model is involved.
-      </label>
-      <textarea id="sb-logs" rows="8" spellcheck="false"
-        placeholder="2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed&#10;2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : POST /v1/charge 502 in 3011 ms"></textarea>
-      <div class="sandbox-row">
-        <input id="sb-service" type="text" value="my-service" aria-label="Service name" />
-        <button id="sb-run-logs" class="primary">Reconstruct from my logs</button>
-        <button id="sb-sample" class="ghost">Use a sample</button>
-      </div>
-    </div>
-
-    <div id="pane-prompt" class="pane hidden">
-      <label for="sb-prompt">
-        Describe a failure in a sentence. A language model writes the raw telemetry a
-        system like that would emit; the deterministic engine then reconstructs it.
-      </label>
-      <textarea id="sb-prompt" rows="3" maxlength="500" spellcheck="false"
-        placeholder="A Redis connection pool exhausts during a traffic spike and the rate limiter starts rejecting every request at the front door."></textarea>
-      <div class="sandbox-row">
-        <button id="sb-run-prompt" class="primary">Generate and reconstruct</button>
-        <span id="sb-quota" class="hint"></span>
-      </div>
-      <p class="disclose">
-        <strong>Synthesised telemetry.</strong> The model writes the input logs — it never
-        writes the conclusion. Hypotheses, confidences and citations all come from the
-        deterministic engine, so you can invent an incident and check that the tool
-        declines to overreach on it.
-      </p>
-    </div>
-
-    <p id="sb-status" class="sandbox-status hidden"></p>
-  </section>
-
   <main>
+    <!-- The product first. Forms come after it. -->
     <section id="stage-panel" class="hidden" aria-label="Incident replay">
       <div class="incident-head">
         <div>
@@ -116,6 +59,14 @@
       </div>
     </section>
 
+    <section id="empty" class="empty">
+      <p class="eyebrow">No analysis yet</p>
+      <p>Pick a scenario above and reconstruct it. The graph replays how the failure
+      started, spread and reached customers — every step tied to the evidence that
+      supports it, and every gap the telemetry could not close named outright.</p>
+      <p>Or scroll down and run it on telemetry of your own.</p>
+    </section>
+
     <section id="detail-panel" class="hidden">
       <nav class="tabs" role="tablist">
         <button data-tab="timeline" class="active" role="tab">Timeline</button>
@@ -133,10 +84,61 @@
       <section id="evidence" class="tab" role="tabpanel"></section>
     </section>
 
-    <section id="empty" class="empty">
-      <p class="eyebrow">No analysis yet</p>
-      <p>Pick a scenario and reconstruct the incident. The graph above will replay
-      how the failure started, spread and reached customers — every step tied to evidence.</p>
+    <p class="notice">
+      The replay is drawn <strong>live in your browser</strong> from the analysis — it is
+      not a recording. For the narrated films that zoom from the service map
+      down to the failing method, open the <a href="/gallery">incident library</a>:
+      each streams from Backblaze&nbsp;B2 with a Genblaze manifest you can verify.
+    </p>
+
+    <section id="sandbox" class="sandbox">
+      <div class="sandbox-head">
+        <h2>Try it on an incident of your own</h2>
+        <p>
+          The bundled scenarios are ours. These two inputs are yours — the engine
+          treats them identically, and reaches its own conclusions either way.
+        </p>
+      </div>
+
+      <div class="seg-group" role="tablist">
+        <button id="tab-paste" class="seg active" role="tab">Paste real log lines</button>
+        <button id="tab-prompt" class="seg" role="tab">Describe an incident</button>
+      </div>
+
+      <div id="pane-paste" class="pane">
+        <label for="sb-logs">
+          Log lines from any service. Python&nbsp;logging, Spring, ISO timestamps and
+          JSON lines are all understood. Nothing is uploaded and no model is involved.
+        </label>
+        <textarea id="sb-logs" rows="7" spellcheck="false"
+          placeholder="2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed&#10;2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : POST /v1/charge 502 in 3011 ms"></textarea>
+        <div class="sandbox-row">
+          <input id="sb-service" type="text" value="my-service" aria-label="Service name" />
+          <button id="sb-run-logs" class="primary">Reconstruct from my logs</button>
+          <button id="sb-sample" class="ghost">Use a sample</button>
+        </div>
+      </div>
+
+      <div id="pane-prompt" class="pane hidden">
+        <label for="sb-prompt">
+          Describe a failure in a sentence. A language model writes the raw telemetry
+          a system like that would emit; the deterministic engine then reconstructs it.
+        </label>
+        <textarea id="sb-prompt" rows="3" maxlength="500" spellcheck="false"
+          placeholder="A Redis connection pool exhausts during a traffic spike and the rate limiter starts rejecting every request at the front door."></textarea>
+        <div class="sandbox-row">
+          <button id="sb-run-prompt" class="primary">Generate and reconstruct</button>
+          <span id="sb-quota" class="hint"></span>
+        </div>
+        <p class="disclose">
+          <strong>Synthesised telemetry.</strong> The model writes the input logs — it
+          never writes the conclusion. Hypotheses, confidences and citations all come
+          from the deterministic engine, so you can invent an incident and check that
+          the tool declines to overreach on it.
+        </p>
+      </div>
+
+      <p id="sb-status" class="sandbox-status hidden"></p>
     </section>
   </main>
 

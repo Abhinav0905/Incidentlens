@@ -86,8 +86,20 @@ function showError(message) {
 
 /* ---------- graph layout ---------- */
 
-function nodeWidth(name) {
-  return Math.max(128, name.length * 7.6 + 26);
+// Width must clear BOTH lines: the 12px name and the 10px owner beneath it.
+// Measuring only the name let long owner strings ("it-devops · external") spill
+// past the box edge.
+function nodeWidth(service) {
+  const name = typeof service === "string" ? service : service.name;
+  const owner =
+    typeof service === "string"
+      ? ""
+      : service.user_facing
+        ? `${service.owner || ""} · user-facing`
+        : service.owner || "";
+  const nameW = name.length * 7.3;
+  const ownerW = owner.length * 6.15;
+  return Math.max(132, Math.ceil(Math.max(nameW, ownerW)) + 26);
 }
 
 function layoutGraph(architecture) {
@@ -155,7 +167,7 @@ function layoutGraph(architecture) {
       pos.set(s.name, {
         x: PAD + colIdx * COL_GAP,
         y: startY + rowIdx * ROW_GAP,
-        w: nodeWidth(s.name),
+        w: nodeWidth(s),
       });
     });
   });
@@ -531,7 +543,11 @@ function wireEvents() {
 document.addEventListener("DOMContentLoaded", () => {
   wireEvents();
   wireSandbox();
-  loadScenarios();
+  // Reconstruct the first scenario immediately. A visitor should land on the
+  // product working, not on an empty state asking them to press a button.
+  loadScenarios().then(() => {
+    if ($("scenario-select").options.length) reconstruct();
+  });
 });
 
 /* ---------------------------------------------------------------- sandbox ---
