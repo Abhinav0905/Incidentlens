@@ -14,11 +14,22 @@
       <span class="tag">evidence-backed incident reconstruction</span>
     </div>
     <div class="controls">
+      <a href="/gallery" class="navlink" id="gallery-link">
+        Incident library <span class="navlink-sub">narrated replays on Backblaze B2</span>
+      </a>
       <label class="visually-hidden" for="scenario-select">Scenario</label>
       <select id="scenario-select"></select>
       <button id="run" class="primary">Reconstruct incident</button>
     </div>
   </header>
+
+  <p class="notice">
+    This page reconstructs the incident <strong>live in your browser</strong> — the
+    animation above is drawn from the analysis, not a recording. For the narrated
+    3&#8209;D films that zoom from the service map down to the failing method, open the
+    <a href="/gallery">incident library</a>; each one streams from Backblaze&nbsp;B2 with
+    a Genblaze manifest you can verify.
+  </p>
 
   <main>
     <section id="stage-panel" class="hidden" aria-label="Incident replay">
