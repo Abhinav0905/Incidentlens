@@ -164,6 +164,45 @@ def build_b2_backend() -> Any:
     return backend
 
 
+def _manifest_lock() -> Any:
+    """Object-lock retention for uploaded manifests, or ``None``.
+
+    Locking the *manifest* rather than the media is the point: a replay can be
+    re-rendered, but the record of what produced it must not be quietly rewritable.
+    Set ``INCIDENTLENS_MANIFEST_LOCK_DAYS`` to enable (the bucket must have Object
+    Lock turned on, which is irreversible and done once in the B2 console).
+
+    GOVERNANCE is the default because it can be bypassed by a key holding
+    ``bypassGovernance`` — a normal delete still fails, but you are not locked out
+    of your own bucket. COMPLIANCE cannot be bypassed by anyone, including you.
+    """
+    raw = os.environ.get("INCIDENTLENS_MANIFEST_LOCK_DAYS", "").strip()
+    if not raw:
+        return None
+    try:
+        days = int(raw)
+    except ValueError:
+        raise RuntimeError(
+            f"INCIDENTLENS_MANIFEST_LOCK_DAYS must be a whole number of days, got {raw!r}"
+        ) from None
+    if days <= 0:
+        return None
+
+    from datetime import UTC, datetime, timedelta
+
+    from genblaze_core import ObjectLockConfig
+
+    mode = os.environ.get("INCIDENTLENS_MANIFEST_LOCK_MODE", "GOVERNANCE").upper()
+    if mode not in {"GOVERNANCE", "COMPLIANCE"}:
+        raise RuntimeError(
+            f"INCIDENTLENS_MANIFEST_LOCK_MODE must be GOVERNANCE or COMPLIANCE, got {mode!r}"
+        )
+    return ObjectLockConfig(
+        retain_until=datetime.now(UTC) + timedelta(days=days),
+        mode=mode,  # type: ignore[arg-type]
+    )
+
+
 def _build_b2_sink() -> Any:
     """Genblaze's provenance sink over the B2 backend."""
     from genblaze_core import KeyStrategy, ObjectStorageSink
@@ -172,6 +211,7 @@ def _build_b2_sink() -> Any:
         build_b2_backend(),
         prefix=os.environ.get("INCIDENTLENS_B2_PREFIX", "incidentlens"),
         key_strategy=KeyStrategy.HIERARCHICAL,
+        manifest_lock=_manifest_lock(),
     )
 
 
@@ -269,14 +309,8 @@ def publish_video(
     sink = None
     try:
         sink = _build_b2_sink() if upload_b2 else None
-        result = Pipeline.ingest(
-            assets=[asset],
-            source="incidentlens-renderer",
-            source_metadata=source_metadata,
-            sink=sink,
-            name=f"incidentlens-{analysis.incident_id}",
-            tenant_id="incidentlens",
-        )
+        result = _ingest(Pipeline, sink=sink, assets=[asset], source_metadata=source_metadata,
+                         analysis=analysis)
     finally:
         if sink is not None:
             sink.close()
@@ -320,6 +354,42 @@ def publish_video(
         embed_method=embed_method,
         narration_manifest_path=narration_path,
     )
+
+
+def _ingest(
+    pipeline_cls: Any,
+    *,
+    sink: Any,
+    assets: list[Any],
+    source_metadata: dict[str, Any],
+    analysis: IncidentAnalysis,
+) -> Any:
+    """Run the Genblaze ingest, making a retention rejection actionable.
+
+    Manifest Object Lock needs an application key carrying ``writeFileRetentions``.
+    Backblaze only grants the retention capabilities to keys created *after* Object
+    Lock is enabled on the bucket, so an older key fails here with a bare
+    "not entitled" that says nothing about the cause.
+    """
+    try:
+        return pipeline_cls.ingest(
+            assets=assets,
+            source="incidentlens-renderer",
+            source_metadata=source_metadata,
+            sink=sink,
+            name=f"incidentlens-{analysis.incident_id}",
+            tenant_id="incidentlens",
+        )
+    except Exception as exc:
+        if sink is not None and "not entitled" in str(exc) and _manifest_lock() is not None:
+            raise RuntimeError(
+                "Manifest Object Lock was requested but this application key lacks "
+                "'writeFileRetentions'. Backblaze grants the retention capabilities "
+                "only to keys created after Object Lock is enabled on the bucket. "
+                "Create a new application key, or unset "
+                "INCIDENTLENS_MANIFEST_LOCK_DAYS to publish without the lock."
+            ) from exc
+        raise
 
 
 __all__ = [
