@@ -155,3 +155,127 @@ def test_gallery_page_is_served() -> None:
     response = client.get("/gallery")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
+
+
+# ---------------------------------------------------------------------- sandbox
+
+
+def test_paste_path_needs_no_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Real log lines are reconstructed with no credential present."""
+    from incidentlens import sandbox
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    client = TestClient(app)
+    logs = "\n".join(
+        [
+            "2026-07-27 09:12:01.114 INFO  [main] payments.api.routes : "
+            "POST /v1/charge 200 in 84 ms",
+            "2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : "
+            "InvalidPasswordError: password authentication failed",
+            "2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : "
+            "POST /v1/charge 502 in 3011 ms",
+        ]
+    )
+    body = client.post(
+        "/api/v1/sandbox/reconstruct", json={"logs": logs, "service": "payment-api"}
+    ).json()
+    assert body["synthesised"] is False
+    assert "No model was involved" in body["disclosure"]
+    assert body["analysis"]["hypotheses"]
+    assert not sandbox.enabled()
+
+
+def test_generation_is_disabled_without_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    client = TestClient(app)
+    response = client.post("/api/v1/sandbox/reconstruct", json={"prompt": "redis died"})
+    assert response.status_code == 503
+    assert "not configured" in response.json()["detail"]
+
+
+def test_telemetry_without_failure_is_refused_not_invented() -> None:
+    """Healthy logs must yield 422, never a fabricated incident."""
+    client = TestClient(app)
+    logs = "\n".join(
+        [
+            "2026-07-27 09:12:01 INFO app.routes : GET /health 200 in 3 ms",
+            "2026-07-27 09:12:02 INFO app.routes : GET /health 200 in 2 ms",
+        ]
+    )
+    response = client.post("/api/v1/sandbox/reconstruct", json={"logs": logs})
+    assert response.status_code == 422
+    assert "honest answer" in response.json()["detail"]
+
+
+def test_per_ip_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    from incidentlens import sandbox
+
+    monkeypatch.setenv("INCIDENTLENS_SANDBOX_PER_IP_PER_HOUR", "2")
+    sandbox._by_ip.clear()
+    sandbox._today[0] = None
+    sandbox.check_quota("1.2.3.4")
+    sandbox.check_quota("1.2.3.4")
+    with pytest.raises(sandbox.RateLimited):
+        sandbox.check_quota("1.2.3.4")
+    sandbox.check_quota("5.6.7.8")  # a different caller is unaffected
+
+
+def test_daily_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    from incidentlens import sandbox
+
+    monkeypatch.setenv("INCIDENTLENS_SANDBOX_PER_IP_PER_HOUR", "99")
+    monkeypatch.setenv("INCIDENTLENS_SANDBOX_DAILY_LIMIT", "3")
+    sandbox._by_ip.clear()
+    sandbox._today[0] = None
+    for i in range(3):
+        sandbox.check_quota(f"ip-{i}")
+    with pytest.raises(sandbox.RateLimited):
+        sandbox.check_quota("ip-fresh")
+
+
+def test_prompt_length_is_capped() -> None:
+    from incidentlens import sandbox
+
+    with pytest.raises(sandbox.SandboxError):
+        sandbox.synthesise_events("x" * (sandbox.MAX_PROMPT_CHARS + 1))
+
+
+def test_model_output_is_validated_not_trusted() -> None:
+    """Unknown services and malformed events are dropped before the engine."""
+    from incidentlens import sandbox
+
+    architecture, events = sandbox._to_domain(
+        {
+            "system": "demo",
+            "services": [
+                {"name": "web", "depends_on": ["api", "ghost"], "user_facing": True},
+                {"name": "api", "depends_on": []},
+            ],
+            "events": [
+                {"id": "a", "source": "web", "timestamp": "2026-07-27T09:00:00Z",
+                 "detail": "ok", "attributes": {"level": "INFO"}},
+                {"id": "b", "source": "api", "timestamp": "not-a-date",
+                 "detail": "bad clock", "attributes": {"level": "ERROR"}},
+                {"id": "c", "source": "does-not-exist", "detail": "dropped"},
+                {"id": "d", "source": "api", "timestamp": "2026-07-27T09:02:00Z",
+                 "detail": "boom", "attributes": "not-a-dict"},
+                {"id": "e", "source": "web", "timestamp": "2026-07-27T09:03:00Z", "detail": "x"},
+            ],
+        }
+    )
+    names = {s.name for s in architecture.services}
+    assert names == {"web", "api"}
+    web = next(s for s in architecture.services if s.name == "web")
+    assert "ghost" not in web.depends_on, "dependency on an undeclared service must be dropped"
+    assert {e.id for e in events} == {"a", "b", "d", "e"}, "unknown-source event must be dropped"
+    assert next(e for e in events if e.id == "d").attributes == {}
+
+
+def test_missing_requirements_flags_weak_telemetry() -> None:
+    from incidentlens import sandbox
+
+    weak = {"events": [{"source_type": "log", "attributes": {"level": "INFO"}}]}
+    problems = sandbox._missing_requirements(weak)
+    assert any("ERROR" in p for p in problems)
+    assert any("change" in p for p in problems)
+    assert any("metric" in p for p in problems)

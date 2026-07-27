@@ -433,6 +433,37 @@ function renderEvidence(analysis) {
 
 /* ---------- orchestration ---------- */
 
+// Paint an analysis into the stage. Shared by the bundled scenarios and by the
+// sandbox, so telemetry a visitor supplies renders through exactly the same path.
+function showAnalysis(architecture, analysis, note) {
+  state.analysis = analysis;
+  state.architecture = architecture;
+  state.frames = buildFrames(analysis);
+
+  $("incident-id").textContent = note
+    ? `${analysis.incident_id} · ${note}`
+    : analysis.incident_id;
+  $("incident-title").textContent = analysis.title;
+  $("incident-impact").textContent = analysis.customer_impact;
+  $("scrub").max = String(Math.max(0, state.frames.length - 1));
+
+  renderGraph(architecture);
+  renderTimeline(analysis);
+  renderRootCause(analysis);
+  renderPropagation(analysis);
+  renderActions(analysis);
+  renderBriefings(analysis);
+  renderEvidence(analysis);
+
+  $("empty").classList.add("hidden");
+  $("stage-panel").classList.remove("hidden");
+  $("detail-panel").classList.remove("hidden");
+
+  applyFrame(0);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduceMotion) startPlayback();
+}
+
 async function reconstruct() {
   const scenario = $("scenario-select").value;
   const button = $("run");
@@ -450,30 +481,7 @@ async function reconstruct() {
       }),
     ]);
 
-    state.analysis = analysis;
-    state.architecture = detail.architecture;
-    state.frames = buildFrames(analysis);
-
-    $("incident-id").textContent = analysis.incident_id;
-    $("incident-title").textContent = analysis.title;
-    $("incident-impact").textContent = analysis.customer_impact;
-    $("scrub").max = String(Math.max(0, state.frames.length - 1));
-
-    renderGraph(detail.architecture);
-    renderTimeline(analysis);
-    renderRootCause(analysis);
-    renderPropagation(analysis);
-    renderActions(analysis);
-    renderBriefings(analysis);
-    renderEvidence(analysis);
-
-    $("empty").classList.add("hidden");
-    $("stage-panel").classList.remove("hidden");
-    $("detail-panel").classList.remove("hidden");
-
-    applyFrame(0);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduceMotion) startPlayback();
+    showAnalysis(detail.architecture, analysis);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -522,5 +530,116 @@ function wireEvents() {
 
 document.addEventListener("DOMContentLoaded", () => {
   wireEvents();
+  wireSandbox();
   loadScenarios();
 });
+
+/* ---------------------------------------------------------------- sandbox ---
+ * Two inputs a visitor controls: paste real log lines, or describe an incident
+ * and let a model write the telemetry. Both end in showAnalysis(), so what they
+ * see is the same reconstruction the bundled scenarios produce.
+ */
+
+const SAMPLE_LOGS = [
+  "2026-07-27 09:12:01.114 INFO  [main] payments.api.routes : POST /v1/charge 200 in 84 ms",
+  "2026-07-27 09:12:31.207 INFO  [main] payments.config.loader : reloaded credential reference db/payments/primary",
+  "2026-07-27 09:12:44.882 WARN  [pool-2] payments.db.pool : connection acquire took 2871 ms (budget 250 ms), 47/50 slots busy",
+  "2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed for user \"svc_payments\"",
+  "2026-07-27 09:13:02.418 ERROR [pool-2] payments.db.credentials : credential resolution failed after 3 attempts (retryable=false); opening circuit",
+  "2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : POST /v1/charge 502 in 3011 ms — 1841 sessions affected in the last 60 s",
+].join("\n");
+
+function sbStatus(message, kind) {
+  const el = $("sb-status");
+  if (!message) {
+    el.classList.add("hidden");
+    return;
+  }
+  el.textContent = message;
+  el.className = "sandbox-status" + (kind ? " " + kind : "");
+}
+
+async function sbRun(body, button, busyLabel) {
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = busyLabel;
+  sbStatus("");
+  stopPlayback();
+  try {
+    const data = await fetchJson("/api/v1/sandbox/reconstruct", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const note = data.synthesised ? "synthesised telemetry" : "your log lines";
+    showAnalysis(data.architecture, data.analysis, note);
+    sbStatus(data.disclosure, "ok");
+    $("stage-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    sbStatus(err.message, "bad");
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+function wireSandbox() {
+  const paste = $("pane-paste");
+  const prompt = $("pane-prompt");
+  const tabPaste = $("tab-paste");
+  const tabPrompt = $("tab-prompt");
+  if (!paste || !prompt) return;
+
+  const select = (which) => {
+    const onPaste = which === "paste";
+    paste.classList.toggle("hidden", !onPaste);
+    prompt.classList.toggle("hidden", onPaste);
+    tabPaste.classList.toggle("active", onPaste);
+    tabPrompt.classList.toggle("active", !onPaste);
+    sbStatus("");
+  };
+  tabPaste.addEventListener("click", () => select("paste"));
+  tabPrompt.addEventListener("click", () => select("prompt"));
+
+  $("sb-sample").addEventListener("click", () => {
+    $("sb-logs").value = SAMPLE_LOGS;
+    $("sb-service").value = "payment-api";
+  });
+
+  $("sb-run-logs").addEventListener("click", () => {
+    const logs = $("sb-logs").value.trim();
+    if (!logs) {
+      sbStatus("Paste a few log lines first, or load the sample.", "bad");
+      return;
+    }
+    sbRun(
+      { logs, service: $("sb-service").value.trim() || "my-service" },
+      $("sb-run-logs"),
+      "Reconstructing…"
+    );
+  });
+
+  $("sb-run-prompt").addEventListener("click", () => {
+    const text = $("sb-prompt").value.trim();
+    if (!text) {
+      sbStatus("Describe the failure you want to see reconstructed.", "bad");
+      return;
+    }
+    sbRun({ prompt: text }, $("sb-run-prompt"), "Generating telemetry…");
+  });
+
+  // Reflect what this deployment actually supports.
+  fetchJson("/api/v1/sandbox")
+    .then((s) => {
+      if (!s.generation_enabled) {
+        $("sb-run-prompt").disabled = true;
+        $("sb-quota").textContent =
+          "Scenario generation is not configured on this deployment — pasting logs still works.";
+        return;
+      }
+      const q = s.quota || {};
+      $("sb-quota").textContent =
+        `${q.daily_remaining} of ${q.daily_limit} generated scenarios left today.`;
+    })
+    .catch(() => {});
+}

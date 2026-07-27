@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from incidentlens import __version__, gallery
+from incidentlens import __version__, gallery, sandbox
 from incidentlens.connectors.synthetic import SyntheticConnector, available_scenarios
 from incidentlens.domain.errors import NoIncidentDetected
 from incidentlens.domain.models import IncidentAnalysis, ScenarioInfo
@@ -103,6 +103,82 @@ def incident_provenance(prefix: str) -> dict[str, object]:
             status_code=502, detail="provenance manifests unreachable in object storage"
         )
     return {"prefix": prefix, "provenance": summary}
+
+
+# ----------------------------------------------------------------------- sandbox
+#
+# Try the engine on telemetry that is not ours. Pasted log lines need no model;
+# a one-line description is turned into structured telemetry by one, and that
+# path is labelled synthesised wherever it surfaces. Either way the conclusions
+# come from the deterministic engine, never from a model.
+
+
+class SandboxRequest(BaseModel):
+    prompt: str = Field(default="", max_length=sandbox.MAX_PROMPT_CHARS)
+    logs: str = Field(default="", max_length=sandbox.MAX_LOG_CHARS)
+    service: str = Field(default="service", max_length=64)
+
+
+@app.get("/api/v1/sandbox")
+def sandbox_state() -> dict[str, object]:
+    """Whether scenario generation is configured here, and what is left today."""
+    return {
+        "generation_enabled": sandbox.enabled(),
+        "paste_enabled": True,
+        "max_prompt_chars": sandbox.MAX_PROMPT_CHARS,
+        "max_log_chars": sandbox.MAX_LOG_CHARS,
+        "quota": sandbox.quota_state(),
+    }
+
+
+@app.post("/api/v1/sandbox/reconstruct")
+def sandbox_reconstruct(request: SandboxRequest, http: Request) -> dict[str, object]:
+    """Reconstruct an incident from pasted logs, or from a described scenario."""
+    synthesised = False
+    try:
+        if request.logs.strip():
+            events = sandbox.parse_log_text(request.logs, service=request.service or "service")
+            from incidentlens.domain.models import ArchitectureGraph, ServiceNode
+
+            architecture = ArchitectureGraph(
+                system="pasted-logs",
+                services=[ServiceNode(name=request.service or "service", user_facing=True)],
+            )
+        else:
+            client = http.client.host if http.client else "unknown"
+            sandbox.check_quota(client)
+            architecture, events = sandbox.synthesise_events(request.prompt)
+            synthesised = True
+    except sandbox.RateLimited as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+    except sandbox.SandboxDisabled as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except sandbox.SandboxError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    try:
+        analysis = DeterministicAnalysisEngine().analyze(events, architecture)
+    except NoIncidentDetected as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{exc} No error-level signal was found, so there is nothing to "
+                "reconstruct — which is the honest answer rather than a guess."
+            ),
+        ) from exc
+
+    return {
+        "synthesised": synthesised,
+        "disclosure": (
+            "Telemetry for this reconstruction was written by a language model from "
+            "your description. The reconstruction itself is deterministic."
+            if synthesised
+            else "Reconstructed from the log lines you provided. No model was involved."
+        ),
+        "architecture": architecture.model_dump(mode="json"),
+        "events": [event.model_dump(mode="json") for event in events],
+        "analysis": analysis.model_dump(mode="json"),
+    }
 
 
 @app.get("/api/v1/incidents/{prefix:path}")

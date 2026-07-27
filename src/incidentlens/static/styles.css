@@ -337,3 +337,66 @@ article small { color: var(--dim); font-family: var(--mono); font-size: 11px; wo
   line-height: 1.55;
 }
 .notice a { color: var(--accent, #37d7c2); }
+
+/* --- sandbox: try it on your own telemetry -------------------------------- */
+
+.sandbox {
+  max-width: 1180px;
+  margin: 26px auto 0;
+  padding: 20px 22px 22px;
+  border: 1px solid var(--line, #263243);
+  border-radius: 10px;
+  background: var(--panel, #131a26);
+}
+.sandbox-head h2 { margin: 0 0 4px; font-size: 17px; }
+.sandbox-head p { margin: 0 0 16px; font-size: 13.5px; opacity: 0.7; max-width: 74ch; }
+.sandbox-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab {
+  font: inherit; font-size: 13px; padding: 6px 13px; cursor: pointer;
+  border-radius: 999px; border: 1px solid var(--line, #263243);
+  background: transparent; color: inherit;
+}
+.tab.active {
+  border-color: var(--accent, #37d7c2);
+  color: var(--accent, #37d7c2);
+  background: rgba(55, 215, 194, 0.08);
+}
+.pane label {
+  display: block; font-size: 12.5px; opacity: 0.72;
+  margin-bottom: 8px; max-width: 78ch; line-height: 1.5;
+}
+.pane textarea {
+  width: 100%; font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 11px 13px; border-radius: 8px; resize: vertical;
+  border: 1px solid var(--line, #263243);
+  background: rgba(0, 0, 0, 0.22); color: inherit;
+}
+.pane textarea:focus { outline: none; border-color: var(--accent, #37d7c2); }
+.sandbox-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 11px; flex-wrap: wrap;
+}
+.sandbox-row input[type="text"] {
+  font: inherit; font-size: 13px; padding: 6px 11px; border-radius: 7px;
+  border: 1px solid var(--line, #263243);
+  background: rgba(0, 0, 0, 0.22); color: inherit; width: 170px;
+}
+button.ghost {
+  font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px;
+  border: 1px solid var(--line, #263243); background: transparent;
+  color: inherit; cursor: pointer;
+}
+button.ghost:hover { border-color: var(--accent, #37d7c2); color: var(--accent, #37d7c2); }
+.hint { font-size: 12px; opacity: 0.6; }
+.disclose {
+  margin: 13px 0 0; padding: 10px 13px; border-radius: 8px;
+  background: rgba(240, 180, 41, 0.07);
+  border-left: 3px solid var(--warn, #f0b429);
+  font-size: 12.5px; line-height: 1.55; max-width: 82ch;
+}
+.sandbox-status {
+  margin: 13px 0 0; padding: 9px 13px; border-radius: 7px; font-size: 12.5px;
+  border: 1px solid var(--line, #263243);
+}
+.sandbox-status.ok  { border-color: #23503f; }
+.sandbox-status.bad { border-color: #6b2f26; }
+.sandbox-status.hidden, .pane.hidden { display: none; }

@@ -31,6 +31,56 @@
     a Genblaze manifest you can verify.
   </p>
 
+  <section id="sandbox" class="sandbox">
+    <div class="sandbox-head">
+      <h2>Try it on an incident of your own</h2>
+      <p>
+        The bundled scenarios are ours. These two inputs are yours — the engine treats
+        them identically, and reaches its own conclusions either way.
+      </p>
+    </div>
+
+    <div class="sandbox-tabs" role="tablist">
+      <button id="tab-paste" class="tab active" role="tab">Paste real log lines</button>
+      <button id="tab-prompt" class="tab" role="tab">Describe an incident</button>
+    </div>
+
+    <div id="pane-paste" class="pane">
+      <label for="sb-logs">
+        Log lines from any service. Python&nbsp;logging, Spring, ISO timestamps and JSON
+        lines are all understood. Nothing is uploaded anywhere and no model is involved.
+      </label>
+      <textarea id="sb-logs" rows="8" spellcheck="false"
+        placeholder="2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed&#10;2026-07-27 09:13:05.001 ERROR [main] payments.api.routes : POST /v1/charge 502 in 3011 ms"></textarea>
+      <div class="sandbox-row">
+        <input id="sb-service" type="text" value="my-service" aria-label="Service name" />
+        <button id="sb-run-logs" class="primary">Reconstruct from my logs</button>
+        <button id="sb-sample" class="ghost">Use a sample</button>
+      </div>
+    </div>
+
+    <div id="pane-prompt" class="pane hidden">
+      <label for="sb-prompt">
+        Describe a failure in a sentence. A language model writes the raw telemetry a
+        system like that would emit; the deterministic engine then reconstructs it.
+      </label>
+      <textarea id="sb-prompt" rows="3" maxlength="500" spellcheck="false"
+        placeholder="A Redis connection pool exhausts during a traffic spike and the rate limiter starts rejecting every request at the front door."></textarea>
+      <div class="sandbox-row">
+        <button id="sb-run-prompt" class="primary">Generate and reconstruct</button>
+        <span id="sb-quota" class="hint"></span>
+      </div>
+      <p class="disclose">
+        <strong>Synthesised telemetry.</strong> The model writes the input logs — it never
+        writes the conclusion. Hypotheses, confidences and citations all come from the
+        deterministic engine, so you can invent an incident and check that the tool
+        declines to overreach on it.
+      </p>
+    </div>
+
+    <p id="sb-status" class="sandbox-status hidden"></p>
+  </section>
+
   <main>
     <section id="stage-panel" class="hidden" aria-label="Incident replay">
       <div class="incident-head">

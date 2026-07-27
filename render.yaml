@@ -23,6 +23,24 @@ services:
         value: production
       - key: INCIDENTLENS_LOG_LEVEL
         value: INFO
-      # No Backblaze or model credentials are needed here: incident media and
-      # its Genblaze manifests are served straight from the public B2 bucket,
-      # and rendering happens offline. Keep this service credential-free.
+
+      # Optional. Enables the "describe an incident" sandbox, where a visitor's
+      # prompt is turned into structured telemetry the engine then reconstructs.
+      # sync:false means this blueprint carries NO value — Render prompts for it
+      # and stores it encrypted. It must never be committed.
+      #
+      # Leave it unset and the sandbox reports itself disabled; pasting real log
+      # lines still works, because that path needs no model at all.
+      - key: OPENAI_API_KEY
+        sync: false
+
+      # Spend guards for that endpoint. It is public, so it is rate limited and
+      # capped; raise these only if you are watching the bill.
+      - key: INCIDENTLENS_SANDBOX_DAILY_LIMIT
+        value: "200"
+      - key: INCIDENTLENS_SANDBOX_PER_IP_PER_HOUR
+        value: "10"
+
+      # No Backblaze credentials are needed: incident media and its Genblaze
+      # manifests are served straight from the public B2 bucket, and rendering
+      # happens offline.
