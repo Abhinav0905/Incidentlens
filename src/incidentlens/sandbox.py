@@ -106,8 +106,18 @@ def quota_state() -> dict[str, int]:
     }
 
 
+def _client_available() -> bool:
+    """Is the model client installed? (``pip install '.[sandbox]'``)"""
+    try:
+        import openai  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def enabled() -> bool:
-    return bool(os.environ.get("OPENAI_API_KEY"))
+    """Generation is only usable with both a credential and the client library."""
+    return bool(os.environ.get("OPENAI_API_KEY")) and _client_available()
 
 
 # ------------------------------------------------------------- paste-your-logs
@@ -203,10 +213,15 @@ def synthesise_events(prompt: str) -> tuple[Any, list[Any]]:
         raise SandboxError("Describe the incident you want to see reconstructed.")
     if len(prompt) > MAX_PROMPT_CHARS:
         raise SandboxError(f"Keep the description under {MAX_PROMPT_CHARS} characters.")
-    if not enabled():
+    if not os.environ.get("OPENAI_API_KEY"):
         raise SandboxDisabled(
             "Scenario generation is not configured on this deployment. "
             "Paste your own log lines instead — that path needs no model."
+        )
+    if not _client_available():
+        raise SandboxDisabled(
+            "This deployment has a credential but not the model client "
+            "(pip install '.[sandbox]'). Paste your own log lines instead."
         )
 
     from openai import OpenAI

@@ -1,5 +1,6 @@
 # Serve-only image for the hosted IncidentLens app.
 #
+# Installs only [graph] and [sandbox] — a graph library and one model client.
 # Deliberately does NOT install the studio/genblaze extras or ffmpeg. Rendering an
 # incident replay takes minutes of CPU and is done offline; the finished media and
 # its Genblaze provenance manifests live in Backblaze B2, and the browser streams
@@ -20,7 +21,7 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 
-RUN pip install --no-cache-dir ".[graph]"
+RUN pip install --no-cache-dir ".[graph,sandbox]"
 
 # Run unprivileged.
 RUN useradd --create-home --uid 1000 appuser

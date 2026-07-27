@@ -279,3 +279,24 @@ def test_missing_requirements_flags_weak_telemetry() -> None:
     assert any("ERROR" in p for p in problems)
     assert any("change" in p for p in problems)
     assert any("metric" in p for p in problems)
+
+
+def test_generation_needs_the_client_library_not_just_a_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A deployment with a key but no model client must say so, not 500.
+
+    This is the bug the first hosted release shipped: the serve-only image omitted
+    the model client, so the import raised inside the request and FastAPI returned
+    a bare Internal Server Error.
+    """
+    from incidentlens import sandbox
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-real")
+    monkeypatch.setattr(sandbox, "_client_available", lambda: False)
+    assert sandbox.enabled() is False
+
+    client = TestClient(app)
+    response = client.post("/api/v1/sandbox/reconstruct", json={"prompt": "redis died"})
+    assert response.status_code == 503
+    assert "model client" in response.json()["detail"]

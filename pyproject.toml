@@ -34,6 +34,12 @@ dependencies = [
 graph = [
   "networkx>=3.0",
 ]
+# The hosted service needs exactly one model client, for the "describe an
+# incident" sandbox. Kept separate from `studio` so the deploy image stays small:
+# no numpy, no cairo, no ffmpeg.
+sandbox = [
+  "openai>=2.0,<3.0",
+]
 studio = [
   "numpy>=1.26",
   "Pillow>=10.3",
