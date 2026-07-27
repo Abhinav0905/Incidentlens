@@ -559,7 +559,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const SAMPLE_LOGS = [
   "2026-07-27 09:12:01.114 INFO  [main] payments.api.routes : POST /v1/charge 200 in 84 ms",
-  "2026-07-27 09:12:31.207 INFO  [main] payments.config.loader : reloaded credential reference db/payments/primary",
+  "2026-07-27 09:12:31.207 INFO  [main] payments.config.loader : config change applied: rotated db credential reference to db/payments/primary (deploy 2026.7.27-b19)",
   "2026-07-27 09:12:44.882 WARN  [pool-2] payments.db.pool : connection acquire took 2871 ms (budget 250 ms), 47/50 slots busy",
   "2026-07-27 09:13:02.410 ERROR [pool-2] payments.db.credentials : asyncpg.InvalidPasswordError: password authentication failed for user \"svc_payments\"",
   "2026-07-27 09:13:02.418 ERROR [pool-2] payments.db.credentials : credential resolution failed after 3 attempts (retryable=false); opening circuit",

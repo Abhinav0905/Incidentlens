@@ -167,7 +167,7 @@ def sandbox_reconstruct(request: SandboxRequest, http: Request) -> dict[str, obj
             ),
         ) from exc
 
-    return {
+    result: dict[str, object] = {
         "synthesised": synthesised,
         "disclosure": (
             "Telemetry for this reconstruction was written by a language model from "
@@ -179,6 +179,13 @@ def sandbox_reconstruct(request: SandboxRequest, http: Request) -> dict[str, obj
         "events": [event.model_dump(mode="json") for event in events],
         "analysis": analysis.model_dump(mode="json"),
     }
+    if synthesised:
+        # Surfaced rather than swallowed: if the model emitted events the domain
+        # rejected, say which and why.
+        dropped = sandbox.last_dropped()
+        if dropped:
+            result["dropped_events"] = dropped
+    return result
 
 
 @app.get("/api/v1/incidents/{prefix:path}")

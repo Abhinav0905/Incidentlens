@@ -186,13 +186,26 @@ Return ONLY a JSON object:
 Rules:
 - 5 to 7 services with a believable dependency chain; exactly one user_facing.
 - 14 to 18 events, ordered in time, spanning about 12 minutes.
+- "source_type" must be exactly one of: "log", "metric", "deployment", "architecture".
+  No other value is accepted.
 - Exactly one service is the origin of the failure. At least two of its events must
   have attributes.level "ERROR", and their "logger" must be a plausible dotted module
   path inside that service.
-- Include one event with "source_type": "change" describing a deploy or config change
-  on the origin service, a minute or two before the first error.
-- Include at least one "source_type": "metric" event whose detail names a metric, its
-  baseline and its degraded value.
+- Include one event with "source_type": "deployment" on the origin service, a minute
+  or two before the first error, describing the deploy or config change that caused
+  it. This is what lets the analysis attribute a root cause instead of reporting an
+  unexplained failure, so it is not optional.
+- Metrics must be machine-readable, not prose. Emit at least ONE metric as TWO
+  events on the same service with the same metric name — a baseline and a degraded
+  reading — shaped like this:
+    {"id": "metric-001", "source_type": "metric", "source": "<service>",
+     "timestamp": "...", "detail": "consumer_lag_seconds = 2",
+     "attributes": {"metric": "consumer_lag_seconds", "value": 2}}
+    {"id": "metric-002", "source_type": "metric", "source": "<service>",
+     "timestamp": "...", "detail": "consumer_lag_seconds = 91",
+     "attributes": {"metric": "consumer_lag_seconds", "value": 91}}
+  "value" must be a NUMBER, not a string. The degraded reading must be at least
+  three times the baseline AND at least 5 higher, or the change is treated as noise.
 - Include a user-visible symptom on the user_facing service.
 - Leave one dependency completely silent — no events at all — so the analysis has a
   genuine gap to report.
@@ -291,21 +304,59 @@ def _missing_requirements(payload: dict[str, Any]) -> list[str]:
     errors = [e for e in events if level(e) in {"ERROR", "CRITICAL", "FATAL"}]
     if len(errors) < 2:
         problems.append("it needs at least two ERROR-level events on the origin service")
-    if not any(e.get("source_type") == "change" for e in events):
+    if not any(e.get("source_type") == "deployment" for e in events):
         problems.append(
-            'it needs one event with "source_type": "change" describing the deploy or '
-            "config change that preceded the failure"
+            'it needs one event with "source_type": "deployment" describing the deploy '
+            'or config change that preceded the failure (the value must be exactly '
+            '"deployment" — "change" is not an accepted source_type)'
         )
     if not any((e.get("attributes") or {}).get("logger") for e in errors):
         problems.append(
             'each ERROR event needs an attributes.logger holding a dotted module path, '
             "so the failure can be attributed to a module"
         )
-    if not any(e.get("source_type") == "metric" for e in events):
-        problems.append('it needs at least one "source_type": "metric" event')
+    if not _has_comparable_metric(events):
+        problems.append(
+            "it needs a metric emitted TWICE on the same service with the same "
+            'attributes.metric name and a NUMERIC attributes.value — a baseline and a '
+            "degraded reading at least 3x higher and at least 5 greater — otherwise no "
+            "anomaly can be detected"
+        )
     if len(events) < 12:
         problems.append(f"it has only {len(events)} events; produce 14 to 18")
     return problems
+
+
+def _has_comparable_metric(events: list[dict[str, Any]]) -> bool:
+    """Is there a metric series the engine could actually call anomalous?
+
+    Mirrors ``_detect_metric_anomalies``: values are grouped by (source, metric name)
+    and a rise only counts at >=3x the baseline and >=5 absolute, so a single reading
+    or a prose description can never trip it.
+    """
+    series: dict[tuple[str, str], list[float]] = {}
+    for event in events:
+        if event.get("source_type") != "metric":
+            continue
+        attributes = event.get("attributes") or {}
+        value = attributes.get("value")
+        if not isinstance(value, int | float) or isinstance(value, bool):
+            continue
+        name = attributes.get("metric") or str(event.get("detail", ""))[:40]
+        series.setdefault((str(event.get("source")), str(name)), []).append(float(value))
+
+    for values in series.values():
+        if len(values) < 2:
+            continue
+        baseline = values[0]
+        for value in values[1:]:
+            rose = (value >= baseline * 3 and value - baseline >= 5) or (
+                baseline < 1 and value >= 5
+            )
+            fell = baseline >= 5 and value <= baseline / 3
+            if rose or fell:
+                return True
+    return False
 
 
 def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
@@ -337,9 +388,12 @@ def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
     )
 
     events: list[Any] = []
+    dropped: list[str] = []
     base = datetime.now(UTC) - timedelta(minutes=20)
     for index, raw in enumerate(payload.get("events") or []):
+        ident = str(raw.get("id") or f"synth-{index:03d}")
         if raw.get("source") not in names:
+            dropped.append(f"{ident}: source {raw.get('source')!r} is not a declared service")
             continue
         stamp = raw.get("timestamp")
         when: datetime
@@ -351,7 +405,7 @@ def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
         try:
             events.append(
                 TelemetryEvent(
-                    id=str(raw.get("id") or f"synth-{index:03d}"),
+                    id=ident,
                     source_type=str(raw.get("source_type") or "log"),
                     source=str(raw["source"]),
                     timestamp=when,
@@ -359,12 +413,34 @@ def _to_domain(payload: dict[str, Any]) -> tuple[Any, list[Any]]:
                     attributes=attributes if isinstance(attributes, dict) else {},
                 )
             )
-        except Exception:  # noqa: BLE001,S112 - drop events the model malformed
+        except Exception as exc:  # noqa: BLE001 - recorded, not swallowed
+            # Never silent. An invalid source_type once discarded every deployment
+            # event here, and because the drop was silent the only visible symptom
+            # was the engine reporting "unexplained failure" on every scenario.
+            reason = str(exc).splitlines()[0][:120]
+            dropped.append(f"{ident}: {reason}")
             continue
 
+    if dropped:
+        _last_dropped[:] = dropped
+    else:
+        _last_dropped.clear()
+
     if len(events) < 4:
-        raise SandboxError("The model returned too few usable events. Try rephrasing.")
+        detail = "; ".join(dropped[:4]) if dropped else "no events were returned"
+        raise SandboxError(
+            f"The model returned too few usable events ({len(events)}). {detail}"
+        )
     return architecture, events
+
+
+# Diagnostics for the most recent synthesis, surfaced in the API response so a
+# malformed-event drop can never again be invisible.
+_last_dropped: list[str] = []
+
+
+def last_dropped() -> list[str]:
+    return list(_last_dropped)
 
 
 __all__ = [
@@ -374,6 +450,7 @@ __all__ = [
     "SandboxDisabled",
     "SandboxError",
     "check_quota",
+    "last_dropped",
     "enabled",
     "looks_like_logs",
     "parse_log_text",

@@ -300,3 +300,97 @@ def test_generation_needs_the_client_library_not_just_a_key(
     response = client.post("/api/v1/sandbox/reconstruct", json={"prompt": "redis died"})
     assert response.status_code == 503
     assert "model client" in response.json()["detail"]
+
+
+# --------------------------------------------- sandbox: the silent-drop regression
+
+
+def test_invalid_source_type_is_reported_not_silently_dropped() -> None:
+    """The bug this guards: source_type "change" is not in SourceType, so every
+    generated deployment event was discarded without a word, and the engine could
+    only ever report an unexplained failure."""
+    from incidentlens import sandbox
+
+    payload = {
+        "system": "demo",
+        "services": [
+            {"name": "web", "depends_on": ["api"], "user_facing": True},
+            {"name": "api", "depends_on": []},
+        ],
+        "events": [
+            {"id": "bad", "source_type": "change", "source": "api",
+             "timestamp": "2026-07-27T09:00:00Z", "detail": "deployed v42"},
+            {"id": "ok1", "source_type": "log", "source": "api",
+             "timestamp": "2026-07-27T09:01:00Z", "detail": "boom",
+             "attributes": {"level": "ERROR"}},
+            {"id": "ok2", "source_type": "log", "source": "api",
+             "timestamp": "2026-07-27T09:02:00Z", "detail": "boom again",
+             "attributes": {"level": "ERROR"}},
+            {"id": "ok3", "source_type": "log", "source": "web",
+             "timestamp": "2026-07-27T09:03:00Z", "detail": "502",
+             "attributes": {"level": "ERROR"}},
+            {"id": "ok4", "source_type": "deployment", "source": "api",
+             "timestamp": "2026-07-27T08:59:00Z", "detail": "deploy 2026.7.27"},
+        ],
+    }
+    _arch, events = sandbox._to_domain(payload)
+    ids = {e.id for e in events}
+    assert "bad" not in ids, "an invalid source_type must not reach the engine"
+    assert "ok4" in ids, '"deployment" is the valid spelling and must survive'
+
+    dropped = sandbox.last_dropped()
+    assert any("bad" in d for d in dropped), "the drop must be recorded, not silent"
+
+
+def test_missing_requirements_demands_deployment_not_change() -> None:
+    from incidentlens import sandbox
+
+    problems = sandbox._missing_requirements(
+        {"events": [{"source_type": "change", "attributes": {"level": "ERROR"}}]}
+    )
+    assert any('"deployment"' in p for p in problems)
+    stale = 'it needs one event with "source_type": "change"'
+    assert not any(p.startswith(stale) for p in problems)
+
+
+def test_comparable_metric_matches_the_engine_threshold() -> None:
+    """Mirrors _detect_metric_anomalies: prose and sub-3x rises must not count."""
+    from incidentlens import sandbox
+
+    prose = [{"source_type": "metric", "source": "a",
+              "detail": "lag rose from 2 to 91", "attributes": {}}]
+    assert sandbox._has_comparable_metric(prose) is False
+
+    single = [{"source_type": "metric", "source": "a",
+               "attributes": {"metric": "lag", "value": 91}}]
+    assert sandbox._has_comparable_metric(single) is False
+
+    shallow = [
+        {"source_type": "metric", "source": "a", "attributes": {"metric": "lag", "value": 10}},
+        {"source_type": "metric", "source": "a", "attributes": {"metric": "lag", "value": 12}},
+    ]
+    assert sandbox._has_comparable_metric(shallow) is False
+
+    real = [
+        {"source_type": "metric", "source": "a", "attributes": {"metric": "lag", "value": 2}},
+        {"source_type": "metric", "source": "a", "attributes": {"metric": "lag", "value": 91}},
+    ]
+    assert sandbox._has_comparable_metric(real) is True
+
+
+def test_ui_sample_logs_can_actually_attribute_a_cause() -> None:
+    """The pasted sample is judge-facing: it must reach an inferred root cause
+    rather than "unexplained failure", which means it has to carry a keyword the
+    engine recognises as a change."""
+    import re
+    from pathlib import Path
+
+    from incidentlens.engines.deterministic import CHANGE_KEYWORDS
+
+    js = Path("src/incidentlens/static/app.js").read_text(encoding="utf-8")
+    block = re.search(r"const SAMPLE_LOGS = \[(.*?)\]\.join", js, re.S)
+    assert block, "SAMPLE_LOGS not found in app.js"
+    text = block.group(1).lower()
+    assert any(k in text for k in CHANGE_KEYWORDS), (
+        "the sample must contain a change keyword or the demo shows an unexplained cause"
+    )
