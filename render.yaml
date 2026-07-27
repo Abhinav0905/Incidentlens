@@ -1,0 +1,28 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: push this repo to GitHub, then in Render choose
+# New -> Blueprint -> pick the repo. Render reads this file, builds the
+# Dockerfile, and gives you an HTTPS URL such as
+# https://incidentlens.onrender.com
+#
+# The `starter` plan is deliberate. On the free plan Render spins the service
+# down after ~15 minutes idle and the next request pays a ~50 second cold
+# start — which is exactly what a hackathon judge would experience clicking a
+# link from a submission page. Starter keeps it warm.
+
+services:
+  - type: web
+    name: incidentlens
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: INCIDENTLENS_ENV
+        value: production
+      - key: INCIDENTLENS_LOG_LEVEL
+        value: INFO
+      # No Backblaze or model credentials are needed here: incident media and
+      # its Genblaze manifests are served straight from the public B2 bucket,
+      # and rendering happens offline. Keep this service credential-free.

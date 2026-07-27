@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncidentLens — incident reconstruction</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="name">IncidentLens</span>
+      <span class="tag">evidence-backed incident reconstruction</span>
+    </div>
+    <div class="controls">
+      <label class="visually-hidden" for="scenario-select">Scenario</label>
+      <select id="scenario-select"></select>
+      <button id="run" class="primary">Reconstruct incident</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="stage-panel" class="hidden" aria-label="Incident replay">
+      <div class="incident-head">
+        <div>
+          <p class="eyebrow" id="incident-id"></p>
+          <h1 id="incident-title"></h1>
+          <p class="impact" id="incident-impact"></p>
+        </div>
+        <div class="clock" id="replay-clock" aria-live="off">--:-- UTC</div>
+      </div>
+
+      <div id="graph-wrap" tabindex="0" aria-label="Architecture replay. Space plays or pauses, arrow keys step.">
+        <svg id="graph" role="img"></svg>
+      </div>
+
+      <div class="transport">
+        <button id="play" class="icon" aria-label="Play">▶</button>
+        <button id="step-back" class="icon" aria-label="Step back">⏮</button>
+        <input id="scrub" type="range" min="0" max="0" value="0" aria-label="Replay position" />
+        <button id="step-fwd" class="icon" aria-label="Step forward">⏭</button>
+        <select id="speed" aria-label="Playback speed">
+          <option value="1">1×</option>
+          <option value="2">2×</option>
+          <option value="4">4×</option>
+        </select>
+        <span class="frame-count" id="frame-count"></span>
+      </div>
+
+      <div class="caption" aria-live="polite">
+        <p class="caption-title" id="caption-title">Press play to replay the incident.</p>
+        <p class="caption-body" id="caption-body"></p>
+        <p class="caption-evidence" id="caption-evidence"></p>
+      </div>
+    </section>
+
+    <section id="detail-panel" class="hidden">
+      <nav class="tabs" role="tablist">
+        <button data-tab="timeline" class="active" role="tab">Timeline</button>
+        <button data-tab="rootcause" role="tab">Root cause</button>
+        <button data-tab="propagation" role="tab">Propagation</button>
+        <button data-tab="actions" role="tab">Actions</button>
+        <button data-tab="briefings" role="tab">Briefings</button>
+        <button data-tab="evidence" role="tab">Evidence</button>
+      </nav>
+      <section id="timeline" class="tab active" role="tabpanel"></section>
+      <section id="rootcause" class="tab" role="tabpanel"></section>
+      <section id="propagation" class="tab" role="tabpanel"></section>
+      <section id="actions" class="tab" role="tabpanel"></section>
+      <section id="briefings" class="tab" role="tabpanel"></section>
+      <section id="evidence" class="tab" role="tabpanel"></section>
+    </section>
+
+    <section id="empty" class="empty">
+      <p class="eyebrow">No analysis yet</p>
+      <p>Pick a scenario and reconstruct the incident. The graph above will replay
+      how the failure started, spread and reached customers — every step tied to evidence.</p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

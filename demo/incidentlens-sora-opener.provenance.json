@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "provider": "OpenAI",
+  "model": "sora-2-pro",
+  "video_job_id": "video_6a62e763b33c8191b2b2a49076803f340d575c34628de656",
+  "created_at": "2026-07-24T04:17:39Z",
+  "completed_at": "2026-07-24T04:19:40Z",
+  "status": "completed",
+  "requested_seconds": "4",
+  "requested_size": "1280x720",
+  "prompt": "Use case: cinematic opener for an evidence-backed incident analysis demo\nPrimary request: An abstract observability network on a dark architectural grid detects one failure and traces it through connected services\nScene/background: midnight blue digital operations space, clean and minimal\nSubject: precise service nodes connected by luminous telemetry paths\nAction: one coral fault pulse appears, then a teal trace isolates its source\nCamera: slow controlled dolly-in, single continuous move\nLighting/mood: premium restrained glow, calm analytical mood\nColor palette: midnight navy, slate, teal, coral, soft white\nConstraints: no people, no faces, no logos, no readable text, no interface labels\nAvoid: jitter, flicker, chaotic motion, warped geometry, illegible typography",
+  "source_asset": {
+    "path": "demo/incidentlens-sora-opener.mp4",
+    "sha256": "f5928aa339465a03da2ef274b18b5ea6e6faf7de5427050ffd47ab870ddedfcd",
+    "duration_seconds": 4.1,
+    "width": 1280,
+    "height": 720,
+    "frame_rate": 30
+  },
+  "branded_asset": {
+    "path": "demo/incidentlens-sora-opener-branded.mp4",
+    "sha256": "90f4017d1ef741eca051577f3e53a7678d4e4b646dbfa7ba17b8a03e2e6f7bac",
+    "duration_seconds": 4.1,
+    "width": 1280,
+    "height": 720,
+    "frame_rate": 30,
+    "derivation": "Incident Lens branding was composited onto the generated source clip."
+  },
+  "verification_source": "OpenAI Videos API job history queried on 2026-07-23 America/Los_Angeles."
+}

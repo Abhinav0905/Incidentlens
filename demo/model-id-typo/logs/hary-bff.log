@@ -1,0 +1,3 @@
+2026-07-23 09:06:00.212 INFO 4210 --- [http-nio-8080-exec-3] c.a.hary.bff.ChatProxy : assistant_requests_per_min=118
+2026-07-23 09:14:05.123 WARN 4210 --- [http-nio-8080-exec-7] c.a.hary.bff.ChatProxy : Chat completion call to hary-ai timed out after 3 retries; serving the fallback error card.
+2026-07-23 09:14:40.001 ERROR 4210 --- [http-nio-8080-exec-7] c.a.hary.bff.ChatProxy : hary-ai assistant unavailable, circuit open. Returning HTTP 502 to the frontend.

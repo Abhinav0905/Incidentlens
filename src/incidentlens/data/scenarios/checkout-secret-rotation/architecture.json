@@ -1,0 +1,50 @@
+{
+  "system": "checkout-platform",
+  "services": [
+    {"name": "frontend", "owner": "web-team", "depends_on": ["order-api"], "user_facing": true},
+    {"name": "order-api", "owner": "commerce-team", "depends_on": ["inventory-api", "payment-api", "orders-db", "order-queue"]},
+    {"name": "inventory-api", "owner": "inventory-team", "depends_on": ["inventory-db"]},
+    {
+      "name": "payment-api",
+      "owner": "payments-team",
+      "depends_on": ["payment-db", "secrets-manager"],
+      "internals": {
+        "entry": "http-api",
+        "stages": [
+          {"name": "http-api", "modules": ["payments.api.routes", "payments.api.app"], "description": "POST /v1/charges"},
+          {"name": "request-auth", "modules": ["payments.api.middleware"], "description": "caller identity and scope check"},
+          {"name": "charge-service", "modules": ["payments.services.charge"], "description": "charge orchestration"},
+          {"name": "idempotency", "modules": ["payments.services.idempotency"], "description": "idempotency key guard"},
+          {"name": "db-session", "modules": ["payments.db.session"], "description": "unit-of-work session"},
+          {"name": "db-pool", "modules": ["payments.db.pool"], "description": "payment-db connection pool"},
+          {"name": "db-credentials", "modules": ["payments.db.credentials"], "description": "database credential resolution"},
+          {"name": "secret-provider", "modules": ["payments.config.secrets"], "description": "secret store client"},
+          {"name": "ledger-write", "modules": ["payments.db.ledger"], "description": "double-entry ledger write"},
+          {"name": "gateway-client", "modules": ["payments.clients.processor"], "description": "card processor transport"},
+          {"name": "settlement-worker", "modules": ["payments.workers.settlement"], "description": "async settlement loop"},
+          {"name": "retry-scheduler", "modules": ["payments.workers.retry"], "description": "backoff scheduler"}
+        ],
+        "edges": [
+          ["http-api", "request-auth"],
+          ["request-auth", "charge-service"],
+          ["charge-service", "idempotency"],
+          ["charge-service", "gateway-client"],
+          ["charge-service", "retry-scheduler"],
+          ["idempotency", "db-session"],
+          ["db-session", "db-pool"],
+          ["db-session", "ledger-write"],
+          ["db-pool", "db-credentials"],
+          ["db-credentials", "secret-provider"],
+          ["retry-scheduler", "settlement-worker"],
+          ["settlement-worker", "db-session"]
+        ]
+      }
+    },
+    {"name": "orders-db", "owner": "commerce-team", "depends_on": []},
+    {"name": "inventory-db", "owner": "inventory-team", "depends_on": []},
+    {"name": "payment-db", "owner": "payments-team", "depends_on": []},
+    {"name": "secrets-manager", "owner": "platform-team", "depends_on": []},
+    {"name": "order-queue", "owner": "platform-team", "depends_on": []},
+    {"name": "fulfillment-worker", "owner": "fulfillment-team", "depends_on": ["order-queue"]}
+  ]
+}

@@ -1,0 +1,533 @@
+{
+  "incident_id": "INC-20260723-e62fe1",
+  "title": "hary-frontend failures after hary-ai change (hary-platform)",
+  "started_at": "2026-07-23T09:09:00Z",
+  "detected_at": "2026-07-23T09:15:10Z",
+  "affected_services": [
+    "hary-ai",
+    "hary-bff",
+    "hary-frontend"
+  ],
+  "customer_impact": "hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests\u2026",
+  "timeline": [
+    {
+      "timestamp": "2026-07-23T09:05:00.010000Z",
+      "title": "System healthy",
+      "description": "Telemetry before the incident shows normal behavior.",
+      "severity": "info",
+      "services": [
+        "hary-ai",
+        "hary-bff"
+      ],
+      "evidence_ids": [
+        "hary-ai-log-00001",
+        "hary-bff-log-00001"
+      ]
+    },
+    {
+      "timestamp": "2026-07-23T09:09:00Z",
+      "title": "Change on hary-ai",
+      "description": "Config change: FAST_TIER_MODEL_ID environment variable set to\u2026",
+      "severity": "warning",
+      "services": [
+        "hary-ai"
+      ],
+      "evidence_ids": [
+        "hary-ai-log-00003"
+      ]
+    },
+    {
+      "timestamp": "2026-07-23T09:12:04.517000Z",
+      "title": "hary-ai: ModelProvider InvokeModel failed for tier 'fast'\u2026",
+      "description": "ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is invalid: 'us.modelhst.fast-tier-4-5-20251001-v1:0'. Could\u2026",
+      "severity": "critical",
+      "services": [
+        "hary-ai"
+      ],
+      "evidence_ids": [
+        "hary-ai-log-00009",
+        "hary-ai-log-00010",
+        "hary-ai-log-00011",
+        "hary-ai-log-00012"
+      ]
+    },
+    {
+      "timestamp": "2026-07-23T09:14:40.001000Z",
+      "title": "hary-bff: hary-ai assistant unavailable, circuit open. Returning HTTP\u2026",
+      "description": "hary-ai assistant unavailable, circuit open. Returning HTTP 502 to the frontend. [c.a.hary.bff.ChatProxy]; Chat completion call to hary-ai timed out after 3\u2026",
+      "severity": "critical",
+      "services": [
+        "hary-bff"
+      ],
+      "evidence_ids": [
+        "hary-bff-log-00003",
+        "hary-bff-log-00002"
+      ]
+    },
+    {
+      "timestamp": "2026-07-23T09:15:10Z",
+      "title": "hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary\u2026",
+      "description": "Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests returned 502",
+      "severity": "critical",
+      "services": [
+        "hary-frontend"
+      ],
+      "evidence_ids": [
+        "hary-frontend-log-00001",
+        "hary-frontend-log-00002"
+      ]
+    },
+    {
+      "timestamp": "2026-07-23T09:15:10Z",
+      "title": "Customer impact",
+      "description": "User-facing failures on hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3\u2026",
+      "severity": "critical",
+      "services": [
+        "hary-frontend"
+      ],
+      "evidence_ids": [
+        "hary-frontend-log-00001",
+        "hary-frontend-log-00002"
+      ]
+    }
+  ],
+  "hypotheses": [
+    {
+      "title": "Customer-facing impact",
+      "confidence": 0.99,
+      "status": "confirmed",
+      "explanation": "Direct evidence from hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests\u2026",
+      "evidence_ids": [
+        "hary-frontend-log-00001",
+        "hary-frontend-log-00002"
+      ]
+    },
+    {
+      "title": "Root cause: change on hary-ai \u2014 Config change: FAST_TIER_MODEL_ID environment variable set to\u2026",
+      "confidence": 0.8999999999999999,
+      "status": "inferred",
+      "explanation": "The change preceded the first failure on hary-ai by about 3 minute(s), and the failure signature matches the change (config pattern). Correlation is strong but not proof.",
+      "evidence_ids": [
+        "hary-ai-log-00003",
+        "hary-ai-log-00009",
+        "hary-ai-log-00010",
+        "hary-ai-log-00011",
+        "hary-ai-log-00012"
+      ]
+    },
+    {
+      "title": "Failure propagated along the dependency graph: hary-ai \u2192 hary-bff \u2192 hary-frontend",
+      "confidence": 0.7,
+      "status": "inferred",
+      "explanation": "Each downstream service shows failure signals after its upstream dependency, in an order consistent with the architecture graph.",
+      "evidence_ids": [
+        "hary-bff-log-00002",
+        "hary-bff-log-00003",
+        "hary-frontend-log-00001",
+        "hary-frontend-log-00002"
+      ]
+    },
+    {
+      "title": "Change record for the hary-ai change",
+      "confidence": 0.0,
+      "status": "unknown",
+      "explanation": "The change appears only in service logs. No deployment or change-management record was found to confirm what was altered.",
+      "evidence_ids": [
+        "hary-ai-log-00003"
+      ]
+    }
+  ],
+  "propagation": [
+    {
+      "from_service": "hary-ai",
+      "to_service": "hary-bff",
+      "mechanism": "dependency timeouts",
+      "evidence_ids": [
+        "hary-bff-log-00003",
+        "hary-bff-log-00002"
+      ]
+    },
+    {
+      "from_service": "hary-bff",
+      "to_service": "hary-frontend",
+      "mechanism": "upstream errors",
+      "evidence_ids": [
+        "hary-frontend-log-00001",
+        "hary-frontend-log-00002"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "hary-ai-log-00001",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:05:00.010000Z",
+      "detail": "HARY microservice starting. LLM tiers: fast=$FAST_TIER_MODEL_ID, balanced=$SMART_TIER_MODEL_ID. Startup health check passed. [main]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "main"
+      }
+    },
+    {
+      "id": "hary-bff-log-00001",
+      "source_type": "log",
+      "source": "hary-bff",
+      "timestamp": "2026-07-23T09:06:00.212000Z",
+      "detail": "assistant_requests_per_min=118 [c.a.hary.bff.ChatProxy]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-bff.log",
+        "logger": "c.a.hary.bff.ChatProxy"
+      }
+    },
+    {
+      "id": "hary-ai-log-00002",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:06:12.441000Z",
+      "detail": "Model registry warmed for tiers fast, balanced, deep. ModelProvider region us-east-1. [hary.models.llm_factory]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.models.llm_factory"
+      }
+    },
+    {
+      "id": "hary-ai-log-00003",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:09:00Z",
+      "detail": "Config change: FAST_TIER_MODEL_ID environment variable set to 'us.modelhst.fast-tier-4-5-20251001-v1:0' for the hary deploy. [config.loader]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "config.loader"
+      }
+    },
+    {
+      "id": "hary-ai-log-00004",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:11:40.120000Z",
+      "detail": "Request admitted: 3 of 60 rpm for session s-8841. [middleware.rate_limit]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "middleware.rate_limit"
+      }
+    },
+    {
+      "id": "hary-ai-log-00005",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:11:44.300000Z",
+      "detail": "PII scan clean; no redactions required. [hary.guardrails.pii]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.guardrails.pii"
+      }
+    },
+    {
+      "id": "hary-ai-log-00006",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:11:47.650000Z",
+      "detail": "Input guardrail passed; intent within policy. [hary.graph.nodes.input_guardrail]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.graph.nodes.input_guardrail"
+      }
+    },
+    {
+      "id": "hary-ai-log-00007",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:11:50.020000Z",
+      "detail": "Conversation context assembled from 3 prior turns. [hary.graph.nodes.conversation_context]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.graph.nodes.conversation_context"
+      }
+    },
+    {
+      "id": "hary-ai-log-00008",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:11:52.900000Z",
+      "detail": "Query rewrite requesting the fast tier through the shared LLM client. [hary.prompts.query_rewrite]",
+      "attributes": {
+        "level": "INFO",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.prompts.query_rewrite"
+      }
+    },
+    {
+      "id": "hary-ai-log-00009",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:12:04.517000Z",
+      "detail": "ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is invalid: 'us.modelhst.fast-tier-4-5-20251001-v1:0'. Could not resolve a foundation model. [hary.models.llm_factory]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.models.llm_factory"
+      }
+    },
+    {
+      "id": "hary-ai-log-00010",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:12:31.204000Z",
+      "detail": "Rebuild of the fast-tier client rejected again: ValidationException, model identifier invalid. The value did not match any ModelProvider foundation model or inference profile. [hary.models.llm_factory]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.models.llm_factory"
+      }
+    },
+    {
+      "id": "hary-ai-log-00011",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:13:00.880000Z",
+      "detail": "Agent step aborted: no usable LLM for tier 'fast'; propagating failure to the response path. [hary.graph.nodes.agent]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.graph.nodes.agent"
+      }
+    },
+    {
+      "id": "hary-ai-log-00012",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:13:20.559000Z",
+      "detail": "All fast-tier model build attempts exhausted; LLM calls failing fast and the circuit breaker is open. [hary.models.llm_factory]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.models.llm_factory"
+      }
+    },
+    {
+      "id": "hary-bff-log-00002",
+      "source_type": "log",
+      "source": "hary-bff",
+      "timestamp": "2026-07-23T09:14:05.123000Z",
+      "detail": "Chat completion call to hary-ai timed out after 3 retries; serving the fallback error card. [c.a.hary.bff.ChatProxy]",
+      "attributes": {
+        "level": "WARN",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-bff.log",
+        "logger": "c.a.hary.bff.ChatProxy"
+      }
+    },
+    {
+      "id": "hary-bff-log-00003",
+      "source_type": "log",
+      "source": "hary-bff",
+      "timestamp": "2026-07-23T09:14:40.001000Z",
+      "detail": "hary-ai assistant unavailable, circuit open. Returning HTTP 502 to the frontend. [c.a.hary.bff.ChatProxy]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-bff.log",
+        "logger": "c.a.hary.bff.ChatProxy"
+      }
+    },
+    {
+      "id": "hary-frontend-log-00001",
+      "source_type": "log",
+      "source": "hary-frontend",
+      "timestamp": "2026-07-23T09:15:10Z",
+      "detail": "Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'.",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-frontend.log",
+        "logger": ""
+      }
+    },
+    {
+      "id": "hary-frontend-log-00002",
+      "source_type": "log",
+      "source": "hary-frontend",
+      "timestamp": "2026-07-23T09:15:45Z",
+      "detail": "Assistant panel still failing; 3 of the last 3 requests returned 502.",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-frontend.log",
+        "logger": ""
+      }
+    },
+    {
+      "id": "hary-ai-log-00013",
+      "source_type": "log",
+      "source": "hary-ai",
+      "timestamp": "2026-07-23T09:16:00.733000Z",
+      "detail": "Model identifier from FAST_TIER_MODEL_ID does not match any ModelProvider foundation model; verify the env var value against the model catalog ('modelhst' should read 'anthropic'). [hary.models.llm_factory]",
+      "attributes": {
+        "level": "ERROR",
+        "file": "/Users/mac001/Documents/Hary/incidentlens/demo/model-id-typo/logs/hary-ai.log",
+        "logger": "hary.models.llm_factory"
+      }
+    }
+  ],
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Review the change on hary-ai (Config change: FAST_TIER_MODEL_ID environment variable\u2026) against the first failure signature.",
+      "reason": "It is the closest change preceding the failure.",
+      "risk": "Read-only review. Low risk."
+    },
+    {
+      "priority": 2,
+      "action": "Prepare a revert of the hary-ai change, pending human approval.",
+      "reason": "Reverting the correlated change is the fastest probable fix.",
+      "risk": "Medium risk. Confirm the correlation first."
+    }
+  ],
+  "engineer_briefing": "At 09:09 UTC, hary-ai: Config change: FAST_TIER_MODEL_ID environment variable set to\u2026 First failure at 09:12 UTC on hary-ai: ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is\u2026. Propagation: hary-ai \u2192 hary-bff \u2192 hary-frontend. Impact: hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests\u2026 First: Review the change on hary-ai (Config change: FAST_TIER_MODEL_ID environment variable\u2026) against the first failure signature.",
+  "executive_summary": "The hary-platform experienced a customer-affecting incident that evidence links to a change to hary-ai. hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests\u2026 Mitigation steps are listed for engineering, pending human approval.",
+  "missing_evidence": [
+    "No telemetry received from: model-provider, llm-gateway, hary-application-backend, hary-db",
+    "Change-management record for the hary-ai change",
+    "Metrics (only logs were supplied)"
+  ],
+  "replay_script": [
+    "At 09:05 UTC \u2014 System healthy. Telemetry before the incident shows normal behavior.",
+    "At 09:09 UTC \u2014 Change on hary-ai. Config change: FAST_TIER_MODEL_ID environment variable set to\u2026",
+    "At 09:12 UTC \u2014 hary-ai: ModelProvider InvokeModel failed for tier 'fast'\u2026. ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is invalid: 'us.modelhst.fast-tier-4-5-20251001-v1:0'. Could\u2026",
+    "At 09:14 UTC \u2014 hary-bff: hary-ai assistant unavailable, circuit open. Returning HTTP\u2026. hary-ai assistant unavailable, circuit open. Returning HTTP 502 to the frontend. [c.a.hary.bff.ChatProxy]; Chat completion call to hary-ai timed out after 3\u2026",
+    "At 09:15 UTC \u2014 hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary\u2026. Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3 of the last 3 requests returned 502",
+    "At 09:15 UTC \u2014 Customer impact. User-facing failures on hary-frontend: Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'; Assistant panel still failing; 3\u2026",
+    "Strongest conclusion (confirmed, 99% confidence): Customer-facing impact.",
+    "First recommended check: Review the change on hary-ai (Config change: FAST_TIER_MODEL_ID environment variable\u2026) against the first failure signature."
+  ],
+  "internal_trace": {
+    "service": "hary-ai",
+    "stages": [
+      {
+        "stage": "rate-limit",
+        "status": "ok",
+        "detail": "Request admitted: 3 of 60 rpm for session s-8841. [middleware.rate_limit]",
+        "evidence_ids": [
+          "hary-ai-log-00004"
+        ]
+      },
+      {
+        "stage": "chat-endpoint",
+        "status": "ok",
+        "detail": "HARY microservice starting. LLM tiers: fast=$FAST_TIER_MODEL_ID, balanced=$SMART_TIER_MODEL_ID. Startup health check passed. [main]",
+        "evidence_ids": [
+          "hary-ai-log-00001"
+        ]
+      },
+      {
+        "stage": "pii-scanner",
+        "status": "ok",
+        "detail": "PII scan clean; no redactions required. [hary.guardrails.pii]",
+        "evidence_ids": [
+          "hary-ai-log-00005"
+        ]
+      },
+      {
+        "stage": "input-guardrail",
+        "status": "ok",
+        "detail": "Input guardrail passed; intent within policy. [hary.graph.nodes.input_guardrail]",
+        "evidence_ids": [
+          "hary-ai-log-00006"
+        ]
+      },
+      {
+        "stage": "conversation-context",
+        "status": "ok",
+        "detail": "Conversation context assembled from 3 prior turns. [hary.graph.nodes.conversation_context]",
+        "evidence_ids": [
+          "hary-ai-log-00007"
+        ]
+      },
+      {
+        "stage": "query-rewriter",
+        "status": "ok",
+        "detail": "Query rewrite requesting the fast tier through the shared LLM client. [hary.prompts.query_rewrite]",
+        "evidence_ids": [
+          "hary-ai-log-00008"
+        ]
+      },
+      {
+        "stage": "router",
+        "status": "dormant",
+        "detail": "not on the traced request path",
+        "evidence_ids": []
+      },
+      {
+        "stage": "agentic",
+        "status": "ok",
+        "detail": "Agent step aborted: no usable LLM for tier 'fast'; propagating failure to the response path. [hary.graph.nodes.agent]",
+        "evidence_ids": [
+          "hary-ai-log-00011"
+        ]
+      },
+      {
+        "stage": "small-talk",
+        "status": "dormant",
+        "detail": "not on the traced request path",
+        "evidence_ids": []
+      },
+      {
+        "stage": "llm-client",
+        "status": "failed",
+        "detail": "ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is invalid: 'us.modelhst.fast-tier-4-5-20251001-v1:0'. Could not resolve a foundation model. [hary.models.llm_factory]",
+        "evidence_ids": [
+          "hary-ai-log-00002",
+          "hary-ai-log-00009",
+          "hary-ai-log-00010",
+          "hary-ai-log-00012",
+          "hary-ai-log-00013"
+        ]
+      },
+      {
+        "stage": "output-guardrail",
+        "status": "dormant",
+        "detail": "not on the traced request path",
+        "evidence_ids": []
+      }
+    ],
+    "path": [
+      "rate-limit",
+      "chat-endpoint",
+      "pii-scanner",
+      "input-guardrail",
+      "conversation-context",
+      "query-rewriter",
+      "llm-client"
+    ],
+    "failing_stage": "llm-client",
+    "summary": "Request traced through 6 stage(s) inside hary-ai; failed at llm-client.",
+    "failing_module": "hary.models.llm_factory",
+    "failing_callers": [
+      "hary.prompts.query_rewrite",
+      "hary.graph.nodes.agent",
+      "hary.graph.nodes.small_talk"
+    ],
+    "failing_callees": [
+      "config.settings",
+      "hary.auth.headers",
+      "hary.transport.http"
+    ],
+    "failing_symbol": "hary.models.llm_factory.get_llm_for_tier",
+    "failing_symbol_role": "client",
+    "failing_symbol_callers": [
+      "hary.graph.builder._resolve_llm"
+    ],
+    "failing_symbol_callees": [
+      "hary.models.llm_factory.model_id_for_tier",
+      "hary.models.llm_factory._build_for_model"
+    ],
+    "blast_radius": 6,
+    "failing_in_cycle": []
+  }
+}

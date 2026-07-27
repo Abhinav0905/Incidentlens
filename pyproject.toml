@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incidentlens"
+version = "0.6.0"
+description = "Evidence-backed incident reconstruction for distributed systems"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+  {name = "Kumar Abhinav"}
+]
+keywords = ["incident-response", "observability", "sre", "root-cause-analysis", "aiops"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Framework :: FastAPI",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: System :: Monitoring",
+]
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.34,<1.0",
+  "pydantic>=2.11,<3.0",
+  "pydantic-settings>=2.9,<3.0",
+  "python-multipart>=0.0.20,<1.0",
+]
+
+[project.optional-dependencies]
+# Richer structural analysis (cycles, blast radius). Optional: code_graph
+# falls back to a pure-Python Tarjan/BFS when networkx is absent.
+graph = [
+  "networkx>=3.0",
+]
+studio = [
+  "numpy>=1.26",
+  "Pillow>=10.3",
+  "cairosvg>=2.7,<3.0",
+  "anthropic>=0.40",
+  "openai>=2.0,<3.0",
+  "boto3>=1.34",
+  "requests>=2.31,<3.0",
+  "networkx>=3.0",
+]
+genblaze = [
+  "genblaze-core[audio]>=0.3.7,<0.4; python_version >= '3.11'",
+  "genblaze-openai>=0.3.3,<0.4; python_version >= '3.11'",
+  "genblaze-s3>=0.3.6,<0.4; python_version >= '3.11'",
+]
+dev = [
+  "pytest>=8.3,<9.0",
+  "pytest-cov>=6.1,<7.0",
+  "httpx>=0.28,<1.0",
+  "ruff>=0.11,<1.0",
+  "mypy>=1.15,<2.0",
+  "numpy>=1.26",
+  "Pillow>=10.3",
+  "cairosvg>=2.7,<3.0",
+  "anthropic>=0.40",
+  "openai>=2.0,<3.0",
+  "boto3>=1.34",
+  "requests>=2.31,<3.0",
+  "networkx>=3.0",
+]
+
+[project.scripts]
+incidentlens = "incidentlens.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+incidentlens = [
+  "static/*",
+  "data/scenarios/*/*.json",
+  "studio/cinema/assets/fonts/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --disable-warnings --maxfail=1"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# the embedded HTML/JS template favors compactness over line length
+"src/incidentlens/studio/graphview.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true

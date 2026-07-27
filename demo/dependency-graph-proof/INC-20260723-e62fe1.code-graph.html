@@ -1,0 +1,294 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>IncidentLens · Mermaid code graph</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;background:#0e1116;color:#e6e9ef;font:14px -apple-system,'Segoe UI',sans-serif}
+header{padding:12px 16px;border-bottom:1px solid #263042;display:flex;gap:12px;align-items:center}
+header b{font-size:15px}header span{color:#8a93a3;font:12px monospace}
+#diagram{padding:16px;overflow:auto}
+pre.src{white-space:pre-wrap;background:#151a22;border:1px solid #263042;border-radius:8px;
+padding:12px;color:#8a93a3;font:12px monospace;margin:16px}
+button{background:#1b212b;border:1px solid #263042;color:#c9d1de;padding:6px 12px;
+border-radius:8px;cursor:pointer;font:12px monospace}
+</style></head><body>
+<header><b>IncidentLens · code graph</b><span>hary-ai · symbol level · focus=auto</span>
+<button onclick="navigator.clipboard.writeText(document.getElementById('src').textContent)">
+copy .mmd</button>
+</header>
+<div id="diagram"><pre class="mermaid">flowchart LR
+  classDef endpoint fill:#16233b,stroke:#8ca8da,color:#dbe4f3;
+  classDef client fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9;
+  classDef config fill:#123230,stroke:#52c7b8,color:#cdeae6;
+  classDef middleware fill:#241b3a,stroke:#a78bda,color:#e2d9f5;
+  classDef graph_node fill:#12321f,stroke:#3fb68b,color:#cdeacd;
+  classDef logic fill:#1b212b,stroke:#55627e,color:#c9d1de;
+  classDef test fill:#241b1b,stroke:#8a6a6a,color:#e0cccc;
+  classDef module fill:#0f1420,stroke:#39435a,color:#8a93a3;
+  classDef failing fill:#4a1512,stroke:#e05b4d,color:#ffffff,stroke-width:3px;
+  classDef candidate fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9,stroke-width:3px,stroke-dasharray:5 3;
+  classDef path fill:#0f3a33,stroke:#52c7b8,color:#dffaf4,stroke-width:2px;
+  classDef cycle fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9,stroke-width:2px,stroke-dasharray:5 3;
+  subgraph m_hary_graph_builder["hary.graph.builder"]
+    subgraph c_hary_graph_builder_GraphBuilder["class GraphBuilder"]
+      n0["GraphBuilder"]
+      n1["__init__()"]
+      n2["compile()"]
+    end
+      n3["_resolve_llm()"]
+      n4["build_graph()"]
+      n5["_build_runtime_context()"]
+  end
+  subgraph m_hary_graph_nodes_agent["hary.graph.nodes.agent"]
+    subgraph c_hary_graph_nodes_agent_AgentNode["class AgentNode"]
+      n6["AgentNode"]
+      n7["__call__()"]
+      n8["_partial_answer_result()"]
+      n9["_synthesize_partial_answer()"]
+      n10["_flatten_for_salvage()"]
+      n11["__init__()"]
+    end
+      n12["_is_retryable_llm_error()"]
+  end
+  subgraph m_hary_graph_nodes_small_talk["hary.graph.nodes.small_talk"]
+    subgraph c_hary_graph_nodes_small_talk_SmallTalkNode["class SmallTalkNode"]
+      n13["SmallTalkNode"]
+      n14["__call__()"]
+      n15["__init__()"]
+    end
+  end
+  subgraph m_hary_models_llm_factory["hary.models.llm_factory"]
+    subgraph c_hary_models_llm_factory_TokenUsage["class TokenUsage"]
+      n16["TokenUsage"]
+      n17["total_input_tokens()"]
+    end
+      n18["get_llm_for_tier()"]
+      n19["_build_for_model()"]
+      n20["model_id_for_tier()"]
+      n21["extract_usage()"]
+      n22["_build_gateway_llm()"]
+      n23["_provider()"]
+      n24["estimate_cost()"]
+      n25["_build_provider_llm()"]
+      n26["_model_deprecates_temperature()"]
+      n27["_model_for()"]
+      n28["_detect_provider_auth_mode()"]
+      n29["_build_anthropic_llm()"]
+      n30["get_llm()"]
+      n31["_mask_secret()"]
+      n32["_gateway_headers()"]
+      n33["cached_system_block()"]
+  end
+  n14 --> n20
+  n14 --> n21
+  n14 --> n24
+  n18 --> n19
+  n18 --> n20
+  n19 --> n22
+  n19 --> n23
+  n19 --> n25
+  n19 --> n28
+  n19 --> n29
+  n20 --> n23
+  n21 --> n23
+  n21 ==> n16
+  n22 --> n26
+  n22 --> n31
+  n22 --> n32
+  n25 --> n26
+  n25 --> n28
+  n27 --> n20
+  n29 --> n26
+  n3 --> n18
+  n30 --> n19
+  n30 --> n27
+  n4 ==> n0
+  n7 --> n12
+  n7 --> n20
+  n7 --> n21
+  n7 --> n24
+  n7 --> n33
+  n7 --> n8
+  n8 --> n20
+  n8 --> n21
+  n8 --> n24
+  n8 --> n9
+  n9 --> n10
+  class n0 logic;
+  class n1 logic;
+  class n2 logic;
+  class n3 client;
+  class n4 logic;
+  class n5 logic;
+  class n6 logic;
+  class n7 logic;
+  class n8 logic;
+  class n9 logic;
+  class n10 logic;
+  class n11 logic;
+  class n12 client;
+  class n13 logic;
+  class n14 logic;
+  class n15 logic;
+  class n16 client;
+  class n17 client;
+  class n18 candidate;
+  class n19 client;
+  class n20 client;
+  class n21 client;
+  class n22 client;
+  class n23 client;
+  class n24 client;
+  class n25 client;
+  class n26 client;
+  class n27 client;
+  class n28 client;
+  class n29 client;
+  class n30 client;
+  class n31 client;
+  class n32 client;
+  class n33 client;</pre></div>
+<pre class="src" id="src" hidden>flowchart LR
+  classDef endpoint fill:#16233b,stroke:#8ca8da,color:#dbe4f3;
+  classDef client fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9;
+  classDef config fill:#123230,stroke:#52c7b8,color:#cdeae6;
+  classDef middleware fill:#241b3a,stroke:#a78bda,color:#e2d9f5;
+  classDef graph_node fill:#12321f,stroke:#3fb68b,color:#cdeacd;
+  classDef logic fill:#1b212b,stroke:#55627e,color:#c9d1de;
+  classDef test fill:#241b1b,stroke:#8a6a6a,color:#e0cccc;
+  classDef module fill:#0f1420,stroke:#39435a,color:#8a93a3;
+  classDef failing fill:#4a1512,stroke:#e05b4d,color:#ffffff,stroke-width:3px;
+  classDef candidate fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9,stroke-width:3px,stroke-dasharray:5 3;
+  classDef path fill:#0f3a33,stroke:#52c7b8,color:#dffaf4,stroke-width:2px;
+  classDef cycle fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9,stroke-width:2px,stroke-dasharray:5 3;
+  subgraph m_hary_graph_builder["hary.graph.builder"]
+    subgraph c_hary_graph_builder_GraphBuilder["class GraphBuilder"]
+      n0["GraphBuilder"]
+      n1["__init__()"]
+      n2["compile()"]
+    end
+      n3["_resolve_llm()"]
+      n4["build_graph()"]
+      n5["_build_runtime_context()"]
+  end
+  subgraph m_hary_graph_nodes_agent["hary.graph.nodes.agent"]
+    subgraph c_hary_graph_nodes_agent_AgentNode["class AgentNode"]
+      n6["AgentNode"]
+      n7["__call__()"]
+      n8["_partial_answer_result()"]
+      n9["_synthesize_partial_answer()"]
+      n10["_flatten_for_salvage()"]
+      n11["__init__()"]
+    end
+      n12["_is_retryable_llm_error()"]
+  end
+  subgraph m_hary_graph_nodes_small_talk["hary.graph.nodes.small_talk"]
+    subgraph c_hary_graph_nodes_small_talk_SmallTalkNode["class SmallTalkNode"]
+      n13["SmallTalkNode"]
+      n14["__call__()"]
+      n15["__init__()"]
+    end
+  end
+  subgraph m_hary_models_llm_factory["hary.models.llm_factory"]
+    subgraph c_hary_models_llm_factory_TokenUsage["class TokenUsage"]
+      n16["TokenUsage"]
+      n17["total_input_tokens()"]
+    end
+      n18["get_llm_for_tier()"]
+      n19["_build_for_model()"]
+      n20["model_id_for_tier()"]
+      n21["extract_usage()"]
+      n22["_build_gateway_llm()"]
+      n23["_provider()"]
+      n24["estimate_cost()"]
+      n25["_build_provider_llm()"]
+      n26["_model_deprecates_temperature()"]
+      n27["_model_for()"]
+      n28["_detect_provider_auth_mode()"]
+      n29["_build_anthropic_llm()"]
+      n30["get_llm()"]
+      n31["_mask_secret()"]
+      n32["_gateway_headers()"]
+      n33["cached_system_block()"]
+  end
+  n14 --> n20
+  n14 --> n21
+  n14 --> n24
+  n18 --> n19
+  n18 --> n20
+  n19 --> n22
+  n19 --> n23
+  n19 --> n25
+  n19 --> n28
+  n19 --> n29
+  n20 --> n23
+  n21 --> n23
+  n21 ==> n16
+  n22 --> n26
+  n22 --> n31
+  n22 --> n32
+  n25 --> n26
+  n25 --> n28
+  n27 --> n20
+  n29 --> n26
+  n3 --> n18
+  n30 --> n19
+  n30 --> n27
+  n4 ==> n0
+  n7 --> n12
+  n7 --> n20
+  n7 --> n21
+  n7 --> n24
+  n7 --> n33
+  n7 --> n8
+  n8 --> n20
+  n8 --> n21
+  n8 --> n24
+  n8 --> n9
+  n9 --> n10
+  class n0 logic;
+  class n1 logic;
+  class n2 logic;
+  class n3 client;
+  class n4 logic;
+  class n5 logic;
+  class n6 logic;
+  class n7 logic;
+  class n8 logic;
+  class n9 logic;
+  class n10 logic;
+  class n11 logic;
+  class n12 client;
+  class n13 logic;
+  class n14 logic;
+  class n15 logic;
+  class n16 client;
+  class n17 client;
+  class n18 candidate;
+  class n19 client;
+  class n20 client;
+  class n21 client;
+  class n22 client;
+  class n23 client;
+  class n24 client;
+  class n25 client;
+  class n26 client;
+  class n27 client;
+  class n28 client;
+  class n29 client;
+  class n30 client;
+  class n31 client;
+  class n32 client;
+  class n33 client;</pre>
+<script type="module">
+// Mermaid is loaded from a CDN here for a one-click viewer. The canonical,
+// no-network artifact is the .mmd file and the interactive HTML (studio).
+try{
+  const m=await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+  m.default.initialize({startOnLoad:true,theme:'dark',securityLevel:'loose',
+    flowchart:{htmlLabels:true,curve:'basis'}});
+}catch(e){
+  document.getElementById('diagram').innerHTML=
+   '<pre class="src">Mermaid CDN unavailable offline. The .mmd source:\n\n'+
+   document.getElementById('src').textContent.replace(/</g,'&lt;')+'</pre>';
+}
+</script></body></html>

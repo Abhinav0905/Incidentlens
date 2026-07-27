@@ -1,0 +1,1226 @@
+{
+  "services": {
+    "stream-consumer": {
+      "service": "stream-consumer",
+      "modules": [
+        {
+          "name": "stream.runtime.supervisor",
+          "kind": "endpoint",
+          "stage": null,
+          "defs": [
+            "main",
+            "Supervisor"
+          ],
+          "loc": 134,
+          "fan_in": 0,
+          "fan_out": 3,
+          "blast_radius": 0,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.runtime.health",
+          "kind": "endpoint",
+          "stage": null,
+          "defs": [
+            "readiness"
+          ],
+          "loc": 52,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.consumer.poller",
+          "kind": "endpoint",
+          "stage": "poll",
+          "defs": [
+            "PartitionPoller"
+          ],
+          "loc": 188,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.consumer.batch",
+          "kind": "module",
+          "stage": "batch-assembler",
+          "defs": [
+            "assemble_batch",
+            "process_batch"
+          ],
+          "loc": 176,
+          "fan_in": 1,
+          "fan_out": 4,
+          "blast_radius": 2,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.consumer.offsets",
+          "kind": "module",
+          "stage": "offset-commit",
+          "defs": [
+            "commit_offsets"
+          ],
+          "loc": 94,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 2,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.codec.schema",
+          "kind": "client",
+          "stage": "schema-resolve",
+          "defs": [
+            "resolve_writer_schema",
+            "_registry_get"
+          ],
+          "loc": 142,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.codec.registry_cache",
+          "kind": "module",
+          "stage": "schema-resolve",
+          "defs": [
+            "SchemaCache"
+          ],
+          "loc": 88,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 4,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.codec.decoder",
+          "kind": "module",
+          "stage": "decode",
+          "defs": [
+            "RecordDecoder",
+            "decode_record",
+            "_coerce_field",
+            "_resolve_reader_schema"
+          ],
+          "loc": 284,
+          "fan_in": 2,
+          "fan_out": 4,
+          "blast_radius": 7,
+          "in_cycle": true
+        },
+        {
+          "name": "stream.codec.coercion",
+          "kind": "module",
+          "stage": "decode",
+          "defs": [
+            "coerce_scalar",
+            "coerce_mapping",
+            "_as_contact"
+          ],
+          "loc": 118,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 7,
+          "in_cycle": true
+        },
+        {
+          "name": "stream.codec.types",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "ContactRef",
+            "OrderEvent",
+            "decode_nested"
+          ],
+          "loc": 146,
+          "fan_in": 3,
+          "fan_out": 1,
+          "blast_radius": 7,
+          "in_cycle": true
+        },
+        {
+          "name": "stream.handlers.validate",
+          "kind": "graph-node",
+          "stage": "validate",
+          "defs": [
+            "validate_event"
+          ],
+          "loc": 108,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.handlers.router",
+          "kind": "graph-node",
+          "stage": "route",
+          "defs": [
+            "route_event"
+          ],
+          "loc": 76,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 4,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.handlers.enrich",
+          "kind": "graph-node",
+          "stage": "enrich",
+          "defs": [
+            "enrich_event",
+            "_member_locale"
+          ],
+          "loc": 132,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 5,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.sinks.notification",
+          "kind": "client",
+          "stage": "sink-notify",
+          "defs": [
+            "NotificationSink"
+          ],
+          "loc": 164,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 6,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.sinks.audit_log",
+          "kind": "client",
+          "stage": "sink-audit",
+          "defs": [
+            "write_audit_record"
+          ],
+          "loc": 71,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 6,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.sinks.dead_letter",
+          "kind": "client",
+          "stage": "dead-letter",
+          "defs": [
+            "publish_dead_letter"
+          ],
+          "loc": 96,
+          "fan_in": 2,
+          "fan_out": 1,
+          "blast_radius": 9,
+          "in_cycle": false
+        },
+        {
+          "name": "stream.metrics.emitter",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "emit_counter"
+          ],
+          "loc": 44,
+          "fan_in": 4,
+          "fan_out": 0,
+          "blast_radius": 14,
+          "in_cycle": false
+        },
+        {
+          "name": "config.settings",
+          "kind": "config",
+          "stage": null,
+          "defs": [
+            "Settings"
+          ],
+          "loc": 62,
+          "fan_in": 6,
+          "fan_out": 0,
+          "blast_radius": 14,
+          "in_cycle": false
+        }
+      ],
+      "edges": [
+        {
+          "src": "stream.runtime.supervisor",
+          "dst": "stream.consumer.poller",
+          "kind": "call",
+          "symbols": [
+            "PartitionPoller",
+            "run_forever"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.runtime.supervisor",
+          "dst": "config.settings",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.supervisor",
+          "dst": "stream.runtime.health",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.health",
+          "dst": "stream.metrics.emitter",
+          "kind": "call",
+          "symbols": [
+            "emit_counter"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.poller",
+          "dst": "stream.consumer.batch",
+          "kind": "call",
+          "symbols": [
+            "assemble_batch",
+            "process_batch"
+          ],
+          "count": 4
+        },
+        {
+          "src": "stream.consumer.poller",
+          "dst": "stream.consumer.offsets",
+          "kind": "call",
+          "symbols": [
+            "commit_offsets"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.consumer.batch",
+          "dst": "stream.codec.schema",
+          "kind": "call",
+          "symbols": [
+            "resolve_writer_schema"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch",
+          "dst": "stream.codec.decoder",
+          "kind": "call",
+          "symbols": [
+            "decode_record"
+          ],
+          "count": 3
+        },
+        {
+          "src": "stream.consumer.batch",
+          "dst": "stream.handlers.validate",
+          "kind": "call",
+          "symbols": [
+            "validate_event"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch",
+          "dst": "stream.metrics.emitter",
+          "kind": "call",
+          "symbols": [
+            "emit_counter"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.codec.schema",
+          "dst": "stream.codec.registry_cache",
+          "kind": "call",
+          "symbols": [
+            "SchemaCache.get"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.codec.schema",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "reader_schema_id"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.codec.registry_cache",
+          "dst": "stream.codec.types",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder",
+          "dst": "stream.codec.coercion",
+          "kind": "call",
+          "symbols": [
+            "coerce_scalar",
+            "coerce_mapping"
+          ],
+          "count": 4
+        },
+        {
+          "src": "stream.codec.decoder",
+          "dst": "stream.codec.types",
+          "kind": "call",
+          "symbols": [
+            "OrderEvent",
+            "decode_nested"
+          ],
+          "count": 3
+        },
+        {
+          "src": "stream.codec.decoder",
+          "dst": "stream.sinks.dead_letter",
+          "kind": "call",
+          "symbols": [
+            "publish_dead_letter"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "reader_schema_id"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.codec.coercion",
+          "dst": "stream.codec.types",
+          "kind": "call",
+          "symbols": [
+            "ContactRef"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.codec.types",
+          "dst": "stream.codec.decoder",
+          "kind": "dynamic-import",
+          "symbols": [
+            "decode_record"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.validate",
+          "dst": "stream.handlers.router",
+          "kind": "call",
+          "symbols": [
+            "route_event"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.validate",
+          "dst": "stream.sinks.dead_letter",
+          "kind": "call",
+          "symbols": [
+            "publish_dead_letter"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.router",
+          "dst": "stream.handlers.enrich",
+          "kind": "call",
+          "symbols": [
+            "enrich_event"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.enrich",
+          "dst": "stream.sinks.notification",
+          "kind": "call",
+          "symbols": [
+            "NotificationSink.send"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.enrich",
+          "dst": "stream.sinks.audit_log",
+          "kind": "call",
+          "symbols": [
+            "write_audit_record"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.sinks.notification",
+          "dst": "stream.metrics.emitter",
+          "kind": "call",
+          "symbols": [
+            "emit_counter"
+          ],
+          "count": 2
+        },
+        {
+          "src": "stream.sinks.notification",
+          "dst": "config.settings",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "stream.sinks.audit_log",
+          "dst": "config.settings",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "stream.sinks.dead_letter",
+          "dst": "stream.metrics.emitter",
+          "kind": "call",
+          "symbols": [
+            "emit_counter"
+          ],
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.offsets",
+          "dst": "config.settings",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        }
+      ],
+      "symbols": [
+        {
+          "qualname": "stream.runtime.supervisor.main",
+          "module": "stream.runtime.supervisor",
+          "name": "main",
+          "kind": "function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 18,
+          "loc": 26,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.runtime.supervisor.Supervisor",
+          "module": "stream.runtime.supervisor",
+          "name": "Supervisor",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 34,
+          "loc": 96,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.runtime.supervisor.Supervisor.run",
+          "module": "stream.runtime.supervisor",
+          "name": "run",
+          "kind": "async-method",
+          "parent": "stream.runtime.supervisor.Supervisor",
+          "role": "logic",
+          "stage": null,
+          "lineno": 41,
+          "loc": 58,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.runtime.health.readiness",
+          "module": "stream.runtime.health",
+          "name": "readiness",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 12,
+          "loc": 18,
+          "decorators": [
+            "@app.get('/healthz')"
+          ]
+        },
+        {
+          "qualname": "stream.consumer.poller.PartitionPoller",
+          "module": "stream.consumer.poller",
+          "name": "PartitionPoller",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 28,
+          "loc": 152,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.consumer.poller.PartitionPoller.run_forever",
+          "module": "stream.consumer.poller",
+          "name": "run_forever",
+          "kind": "async-method",
+          "parent": "stream.consumer.poller.PartitionPoller",
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 46,
+          "loc": 62,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.consumer.poller.PartitionPoller._on_assignment",
+          "module": "stream.consumer.poller",
+          "name": "_on_assignment",
+          "kind": "method",
+          "parent": "stream.consumer.poller.PartitionPoller",
+          "role": "logic",
+          "stage": null,
+          "lineno": 112,
+          "loc": 24,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.consumer.batch.assemble_batch",
+          "module": "stream.consumer.batch",
+          "name": "assemble_batch",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 29,
+          "loc": 44,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.consumer.batch.process_batch",
+          "module": "stream.consumer.batch",
+          "name": "process_batch",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 74,
+          "loc": 71,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.consumer.offsets.commit_offsets",
+          "module": "stream.consumer.offsets",
+          "name": "commit_offsets",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 22,
+          "loc": 38,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.schema.resolve_writer_schema",
+          "module": "stream.codec.schema",
+          "name": "resolve_writer_schema",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 27,
+          "loc": 46,
+          "decorators": [
+            "@traced"
+          ]
+        },
+        {
+          "qualname": "stream.codec.schema._registry_get",
+          "module": "stream.codec.schema",
+          "name": "_registry_get",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 86,
+          "loc": 22,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.registry_cache.SchemaCache",
+          "module": "stream.codec.registry_cache",
+          "name": "SchemaCache",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 19,
+          "loc": 66,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.registry_cache.SchemaCache.get",
+          "module": "stream.codec.registry_cache",
+          "name": "get",
+          "kind": "method",
+          "parent": "stream.codec.registry_cache.SchemaCache",
+          "role": "logic",
+          "stage": null,
+          "lineno": 31,
+          "loc": 24,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.decoder.RecordDecoder",
+          "module": "stream.codec.decoder",
+          "name": "RecordDecoder",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 34,
+          "loc": 118,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.decoder.RecordDecoder.decode",
+          "module": "stream.codec.decoder",
+          "name": "decode",
+          "kind": "method",
+          "parent": "stream.codec.decoder.RecordDecoder",
+          "role": "logic",
+          "stage": null,
+          "lineno": 52,
+          "loc": 41,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.decoder.decode_record",
+          "module": "stream.codec.decoder",
+          "name": "decode_record",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 118,
+          "loc": 63,
+          "decorators": [
+            "@traced"
+          ]
+        },
+        {
+          "qualname": "stream.codec.decoder._coerce_field",
+          "module": "stream.codec.decoder",
+          "name": "_coerce_field",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 204,
+          "loc": 37,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.decoder._resolve_reader_schema",
+          "module": "stream.codec.decoder",
+          "name": "_resolve_reader_schema",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 258,
+          "loc": 19,
+          "decorators": [
+            "@lru_cache"
+          ]
+        },
+        {
+          "qualname": "stream.codec.coercion.coerce_scalar",
+          "module": "stream.codec.coercion",
+          "name": "coerce_scalar",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 19,
+          "loc": 28,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.coercion.coerce_mapping",
+          "module": "stream.codec.coercion",
+          "name": "coerce_mapping",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 52,
+          "loc": 34,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.coercion._as_contact",
+          "module": "stream.codec.coercion",
+          "name": "_as_contact",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 91,
+          "loc": 21,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.codec.types.ContactRef",
+          "module": "stream.codec.types",
+          "name": "ContactRef",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 22,
+          "loc": 18,
+          "decorators": [
+            "@dataclass"
+          ]
+        },
+        {
+          "qualname": "stream.codec.types.OrderEvent",
+          "module": "stream.codec.types",
+          "name": "OrderEvent",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 44,
+          "loc": 41,
+          "decorators": [
+            "@dataclass"
+          ]
+        },
+        {
+          "qualname": "stream.codec.types.decode_nested",
+          "module": "stream.codec.types",
+          "name": "decode_nested",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 96,
+          "loc": 31,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.handlers.validate.validate_event",
+          "module": "stream.handlers.validate",
+          "name": "validate_event",
+          "kind": "function",
+          "parent": null,
+          "role": "graph-node",
+          "stage": null,
+          "lineno": 26,
+          "loc": 52,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.handlers.router.route_event",
+          "module": "stream.handlers.router",
+          "name": "route_event",
+          "kind": "function",
+          "parent": null,
+          "role": "graph-node",
+          "stage": null,
+          "lineno": 21,
+          "loc": 39,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.handlers.enrich.enrich_event",
+          "module": "stream.handlers.enrich",
+          "name": "enrich_event",
+          "kind": "async-function",
+          "parent": null,
+          "role": "graph-node",
+          "stage": null,
+          "lineno": 24,
+          "loc": 47,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.handlers.enrich._member_locale",
+          "module": "stream.handlers.enrich",
+          "name": "_member_locale",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 78,
+          "loc": 16,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.sinks.notification.NotificationSink",
+          "module": "stream.sinks.notification",
+          "name": "NotificationSink",
+          "kind": "class",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 22,
+          "loc": 138,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.sinks.notification.NotificationSink.send",
+          "module": "stream.sinks.notification",
+          "name": "send",
+          "kind": "async-method",
+          "parent": "stream.sinks.notification.NotificationSink",
+          "role": "client",
+          "stage": null,
+          "lineno": 44,
+          "loc": 42,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.sinks.audit_log.write_audit_record",
+          "module": "stream.sinks.audit_log",
+          "name": "write_audit_record",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 18,
+          "loc": 29,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.sinks.dead_letter.publish_dead_letter",
+          "module": "stream.sinks.dead_letter",
+          "name": "publish_dead_letter",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 23,
+          "loc": 41,
+          "decorators": []
+        },
+        {
+          "qualname": "stream.metrics.emitter.emit_counter",
+          "module": "stream.metrics.emitter",
+          "name": "emit_counter",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 14,
+          "loc": 16,
+          "decorators": []
+        },
+        {
+          "qualname": "config.settings.Settings",
+          "module": "config.settings",
+          "name": "Settings",
+          "kind": "class",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 12,
+          "loc": 44,
+          "decorators": []
+        },
+        {
+          "qualname": "config.settings.Settings.reader_schema_id",
+          "module": "config.settings",
+          "name": "reader_schema_id",
+          "kind": "method",
+          "parent": "config.settings.Settings",
+          "role": "config",
+          "stage": null,
+          "lineno": 40,
+          "loc": 8,
+          "decorators": [
+            "@property"
+          ]
+        }
+      ],
+      "symbol_edges": [
+        {
+          "src": "stream.runtime.supervisor.main",
+          "dst": "stream.runtime.supervisor.Supervisor",
+          "kind": "construct",
+          "lineno": 27,
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.supervisor.main",
+          "dst": "stream.runtime.supervisor.Supervisor.run",
+          "kind": "call",
+          "lineno": 31,
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.supervisor.Supervisor.run",
+          "dst": "stream.consumer.poller.PartitionPoller",
+          "kind": "construct",
+          "lineno": 55,
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.supervisor.Supervisor.run",
+          "dst": "stream.consumer.poller.PartitionPoller.run_forever",
+          "kind": "call",
+          "lineno": 61,
+          "count": 1
+        },
+        {
+          "src": "stream.runtime.health.readiness",
+          "dst": "stream.metrics.emitter.emit_counter",
+          "kind": "call",
+          "lineno": 21,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.poller.PartitionPoller.run_forever",
+          "dst": "stream.consumer.batch.assemble_batch",
+          "kind": "call",
+          "lineno": 72,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.poller.PartitionPoller.run_forever",
+          "dst": "stream.consumer.batch.process_batch",
+          "kind": "call",
+          "lineno": 78,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.poller.PartitionPoller._on_assignment",
+          "dst": "stream.consumer.offsets.commit_offsets",
+          "kind": "call",
+          "lineno": 128,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch.assemble_batch",
+          "dst": "stream.metrics.emitter.emit_counter",
+          "kind": "call",
+          "lineno": 66,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch.process_batch",
+          "dst": "stream.codec.schema.resolve_writer_schema",
+          "kind": "call",
+          "lineno": 88,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch.process_batch",
+          "dst": "stream.codec.decoder.decode_record",
+          "kind": "call",
+          "lineno": 96,
+          "count": 1
+        },
+        {
+          "src": "stream.consumer.batch.process_batch",
+          "dst": "stream.handlers.validate.validate_event",
+          "kind": "call",
+          "lineno": 121,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.schema.resolve_writer_schema",
+          "dst": "stream.codec.registry_cache.SchemaCache.get",
+          "kind": "call",
+          "lineno": 44,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.schema.resolve_writer_schema",
+          "dst": "stream.codec.schema._registry_get",
+          "kind": "call",
+          "lineno": 58,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.schema._registry_get",
+          "dst": "config.settings.Settings.reader_schema_id",
+          "kind": "call",
+          "lineno": 99,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.decode_record",
+          "dst": "stream.codec.decoder._resolve_reader_schema",
+          "kind": "call",
+          "lineno": 129,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.decode_record",
+          "dst": "stream.codec.decoder.RecordDecoder",
+          "kind": "construct",
+          "lineno": 134,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.decode_record",
+          "dst": "stream.codec.decoder.RecordDecoder.decode",
+          "kind": "call",
+          "lineno": 141,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.decode_record",
+          "dst": "stream.codec.types.OrderEvent",
+          "kind": "construct",
+          "lineno": 158,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.decode_record",
+          "dst": "stream.sinks.dead_letter.publish_dead_letter",
+          "kind": "call",
+          "lineno": 171,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder.RecordDecoder.decode",
+          "dst": "stream.codec.decoder._coerce_field",
+          "kind": "call",
+          "lineno": 79,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder._coerce_field",
+          "dst": "stream.codec.coercion.coerce_scalar",
+          "kind": "call",
+          "lineno": 219,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder._coerce_field",
+          "dst": "stream.codec.coercion.coerce_mapping",
+          "kind": "call",
+          "lineno": 227,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder._coerce_field",
+          "dst": "stream.codec.types.decode_nested",
+          "kind": "call",
+          "lineno": 234,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.decoder._resolve_reader_schema",
+          "dst": "config.settings.Settings.reader_schema_id",
+          "kind": "call",
+          "lineno": 266,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.coercion.coerce_mapping",
+          "dst": "stream.codec.coercion._as_contact",
+          "kind": "call",
+          "lineno": 74,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.coercion._as_contact",
+          "dst": "stream.codec.types.ContactRef",
+          "kind": "construct",
+          "lineno": 104,
+          "count": 1
+        },
+        {
+          "src": "stream.codec.types.decode_nested",
+          "dst": "stream.codec.decoder.decode_record",
+          "kind": "dynamic",
+          "lineno": 112,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.validate.validate_event",
+          "dst": "stream.handlers.router.route_event",
+          "kind": "call",
+          "lineno": 63,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.validate.validate_event",
+          "dst": "stream.sinks.dead_letter.publish_dead_letter",
+          "kind": "call",
+          "lineno": 71,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.router.route_event",
+          "dst": "stream.handlers.enrich.enrich_event",
+          "kind": "call",
+          "lineno": 48,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.enrich.enrich_event",
+          "dst": "stream.handlers.enrich._member_locale",
+          "kind": "call",
+          "lineno": 52,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.enrich.enrich_event",
+          "dst": "stream.sinks.notification.NotificationSink.send",
+          "kind": "call",
+          "lineno": 58,
+          "count": 1
+        },
+        {
+          "src": "stream.handlers.enrich.enrich_event",
+          "dst": "stream.sinks.audit_log.write_audit_record",
+          "kind": "call",
+          "lineno": 64,
+          "count": 1
+        },
+        {
+          "src": "stream.sinks.notification.NotificationSink.send",
+          "dst": "stream.metrics.emitter.emit_counter",
+          "kind": "call",
+          "lineno": 79,
+          "count": 1
+        },
+        {
+          "src": "stream.sinks.dead_letter.publish_dead_letter",
+          "dst": "stream.metrics.emitter.emit_counter",
+          "kind": "call",
+          "lineno": 55,
+          "count": 1
+        }
+      ],
+      "cycles": [
+        [
+          "stream.codec.coercion",
+          "stream.codec.decoder",
+          "stream.codec.types"
+        ]
+      ],
+      "symbol_cycles": [
+        [
+          "stream.codec.decoder.RecordDecoder.decode",
+          "stream.codec.decoder._coerce_field",
+          "stream.codec.decoder.decode_record",
+          "stream.codec.types.decode_nested"
+        ]
+      ]
+    }
+  }
+}

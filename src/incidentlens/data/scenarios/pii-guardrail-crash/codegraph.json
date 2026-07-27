@@ -1,0 +1,1604 @@
+{
+  "services": {
+    "hary-ai": {
+      "service": "hary-ai",
+      "modules": [
+        {
+          "name": "main",
+          "kind": "endpoint",
+          "stage": "chat-endpoint",
+          "defs": [
+            "create_app",
+            "setup_logging"
+          ],
+          "loc": 88,
+          "fan_in": 0,
+          "fan_out": 3,
+          "blast_radius": 0,
+          "in_cycle": false
+        },
+        {
+          "name": "middleware.rate_limit",
+          "kind": "middleware",
+          "stage": "rate-limit",
+          "defs": [
+            "RateLimitMiddleware"
+          ],
+          "loc": 74,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.transport.routes",
+          "kind": "endpoint",
+          "stage": "chat-endpoint",
+          "defs": [
+            "chat",
+            "health"
+          ],
+          "loc": 142,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.guardrails.pii",
+          "kind": "graph-node",
+          "stage": "pii-scanner",
+          "defs": [
+            "scan",
+            "redact"
+          ],
+          "loc": 210,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 4,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.input_guardrail",
+          "kind": "graph-node",
+          "stage": "input-guardrail",
+          "defs": [
+            "InputGuardrailNode"
+          ],
+          "loc": 168,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.conversation_context",
+          "kind": "graph-node",
+          "stage": "conversation-context",
+          "defs": [
+            "ConversationContextNode"
+          ],
+          "loc": 190,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.prompts.query_rewrite",
+          "kind": "graph-node",
+          "stage": "query-rewriter",
+          "defs": [
+            "rewrite_query",
+            "REWRITE_PROMPT"
+          ],
+          "loc": 133,
+          "fan_in": 0,
+          "fan_out": 1,
+          "blast_radius": 0,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.router",
+          "kind": "graph-node",
+          "stage": "router",
+          "defs": [
+            "RouterNode"
+          ],
+          "loc": 121,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.agent",
+          "kind": "graph-node",
+          "stage": "agentic",
+          "defs": [
+            "AgentNode"
+          ],
+          "loc": 342,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.small_talk",
+          "kind": "graph-node",
+          "stage": "small-talk",
+          "defs": [
+            "SmallTalkNode"
+          ],
+          "loc": 64,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.nodes.output_guardrail",
+          "kind": "graph-node",
+          "stage": "output-guardrail",
+          "defs": [
+            "OutputGuardrailNode"
+          ],
+          "loc": 150,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.models.llm_factory",
+          "kind": "client",
+          "stage": "llm-client",
+          "defs": [
+            "get_llm",
+            "_build_gateway_llm",
+            "_gateway_headers"
+          ],
+          "loc": 428,
+          "fan_in": 3,
+          "fan_out": 3,
+          "blast_radius": 6,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.graph.builder",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "GraphBuilder"
+          ],
+          "loc": 285,
+          "fan_in": 1,
+          "fan_out": 6,
+          "blast_radius": 2,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.auth.headers",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "gateway_headers",
+            "basic_auth_value"
+          ],
+          "loc": 59,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 7,
+          "in_cycle": false
+        },
+        {
+          "name": "hary.transport.http",
+          "kind": "client",
+          "stage": null,
+          "defs": [
+            "post_json"
+          ],
+          "loc": 97,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 7,
+          "in_cycle": false
+        },
+        {
+          "name": "config.settings",
+          "kind": "config",
+          "stage": null,
+          "defs": [
+            "Settings"
+          ],
+          "loc": 512,
+          "fan_in": 4,
+          "fan_out": 0,
+          "blast_radius": 9,
+          "in_cycle": false
+        }
+      ],
+      "edges": [
+        {
+          "src": "main",
+          "dst": "hary.transport.routes",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "main",
+          "dst": "middleware.rate_limit",
+          "kind": "call",
+          "symbols": [
+            "RateLimitMiddleware"
+          ],
+          "count": 1
+        },
+        {
+          "src": "main",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "log_level"
+          ],
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes",
+          "dst": "hary.graph.builder",
+          "kind": "call",
+          "symbols": [
+            "compile"
+          ],
+          "count": 1
+        },
+        {
+          "src": "middleware.rate_limit",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "rate_limit_rpm"
+          ],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.input_guardrail",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.conversation_context",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.router",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.agent",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.small_talk",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder",
+          "dst": "hary.graph.nodes.output_guardrail",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.input_guardrail",
+          "dst": "hary.guardrails.pii",
+          "kind": "call",
+          "symbols": [
+            "scan"
+          ],
+          "count": 2
+        },
+        {
+          "src": "hary.graph.nodes.conversation_context",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "context_window"
+          ],
+          "count": 1
+        },
+        {
+          "src": "hary.prompts.query_rewrite",
+          "dst": "hary.models.llm_factory",
+          "kind": "call",
+          "symbols": [
+            "get_llm"
+          ],
+          "count": 2
+        },
+        {
+          "src": "hary.graph.nodes.agent",
+          "dst": "hary.models.llm_factory",
+          "kind": "call",
+          "symbols": [
+            "get_llm"
+          ],
+          "count": 3
+        },
+        {
+          "src": "hary.graph.nodes.small_talk",
+          "dst": "hary.models.llm_factory",
+          "kind": "call",
+          "symbols": [
+            "get_llm"
+          ],
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory",
+          "dst": "config.settings",
+          "kind": "call",
+          "symbols": [
+            "gateway_base_url",
+            "gateway_virtual_key",
+            "gateway_basic_auth"
+          ],
+          "count": 6
+        },
+        {
+          "src": "hary.models.llm_factory",
+          "dst": "hary.auth.headers",
+          "kind": "call",
+          "symbols": [
+            "gateway_headers"
+          ],
+          "count": 2
+        },
+        {
+          "src": "hary.models.llm_factory",
+          "dst": "hary.transport.http",
+          "kind": "call",
+          "symbols": [
+            "post_json"
+          ],
+          "count": 2
+        }
+      ],
+      "symbols": [
+        {
+          "qualname": "hary.graph.builder",
+          "module": "hary.graph.builder",
+          "name": "builder",
+          "kind": "module",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 0,
+          "loc": 0,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder._build_runtime_context",
+          "module": "hary.graph.builder",
+          "name": "_build_runtime_context",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 121,
+          "loc": 41,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder._resolve_llm",
+          "module": "hary.graph.builder",
+          "name": "_resolve_llm",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 164,
+          "loc": 12,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder.GraphBuilder",
+          "module": "hary.graph.builder",
+          "name": "GraphBuilder",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 205,
+          "loc": 81,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder.GraphBuilder.__init__",
+          "module": "hary.graph.builder",
+          "name": "__init__",
+          "kind": "method",
+          "parent": "hary.graph.builder.GraphBuilder",
+          "role": "logic",
+          "stage": null,
+          "lineno": 214,
+          "loc": 2,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder.GraphBuilder.compile",
+          "module": "hary.graph.builder",
+          "name": "compile",
+          "kind": "method",
+          "parent": "hary.graph.builder.GraphBuilder",
+          "role": "logic",
+          "stage": null,
+          "lineno": 217,
+          "loc": 69,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.builder.build_graph",
+          "module": "hary.graph.builder",
+          "name": "build_graph",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 288,
+          "loc": 98,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent._is_retryable_llm_error",
+          "module": "hary.graph.nodes.agent",
+          "name": "_is_retryable_llm_error",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 69,
+          "loc": 11,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode",
+          "module": "hary.graph.nodes.agent",
+          "name": "AgentNode",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 82,
+          "loc": 361,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode.__init__",
+          "module": "hary.graph.nodes.agent",
+          "name": "__init__",
+          "kind": "method",
+          "parent": "hary.graph.nodes.agent.AgentNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 85,
+          "loc": 14,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode._flatten_for_salvage",
+          "module": "hary.graph.nodes.agent",
+          "name": "_flatten_for_salvage",
+          "kind": "method",
+          "parent": "hary.graph.nodes.agent.AgentNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 101,
+          "loc": 33,
+          "decorators": [
+            "staticmethod"
+          ]
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode._synthesize_partial_answer",
+          "module": "hary.graph.nodes.agent",
+          "name": "_synthesize_partial_answer",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.agent.AgentNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 135,
+          "loc": 21,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "module": "hary.graph.nodes.agent",
+          "name": "_partial_answer_result",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.agent.AgentNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 157,
+          "loc": 32,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.agent.AgentNode.__call__",
+          "module": "hary.graph.nodes.agent",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.agent.AgentNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 190,
+          "loc": 253,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.conversation_context.ConversationContextNode",
+          "module": "hary.graph.nodes.conversation_context",
+          "name": "ConversationContextNode",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 14,
+          "loc": 12,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.conversation_context.ConversationContextNode.__call__",
+          "module": "hary.graph.nodes.conversation_context",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.conversation_context.ConversationContextNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 17,
+          "loc": 9,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.input_guardrail.InputGuardrailNode",
+          "module": "hary.graph.nodes.input_guardrail",
+          "name": "InputGuardrailNode",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 15,
+          "loc": 25,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.input_guardrail.InputGuardrailNode.__call__",
+          "module": "hary.graph.nodes.input_guardrail",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.input_guardrail.InputGuardrailNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 18,
+          "loc": 22,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.output_guardrail.OutputGuardrailNode",
+          "module": "hary.graph.nodes.output_guardrail",
+          "name": "OutputGuardrailNode",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 16,
+          "loc": 45,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.output_guardrail.OutputGuardrailNode.__call__",
+          "module": "hary.graph.nodes.output_guardrail",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.output_guardrail.OutputGuardrailNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 19,
+          "loc": 42,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.router.RouterNode",
+          "module": "hary.graph.nodes.router",
+          "name": "RouterNode",
+          "kind": "class",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 17,
+          "loc": 56,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.router.RouterNode.__call__",
+          "module": "hary.graph.nodes.router",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.router.RouterNode",
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 20,
+          "loc": 53,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.small_talk.SmallTalkNode",
+          "module": "hary.graph.nodes.small_talk",
+          "name": "SmallTalkNode",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 28,
+          "loc": 91,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.small_talk.SmallTalkNode.__init__",
+          "module": "hary.graph.nodes.small_talk",
+          "name": "__init__",
+          "kind": "method",
+          "parent": "hary.graph.nodes.small_talk.SmallTalkNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 31,
+          "loc": 3,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.graph.nodes.small_talk.SmallTalkNode.__call__",
+          "module": "hary.graph.nodes.small_talk",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "hary.graph.nodes.small_talk.SmallTalkNode",
+          "role": "logic",
+          "stage": null,
+          "lineno": 35,
+          "loc": 84,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.guardrails.pii._get_presidio",
+          "module": "hary.guardrails.pii",
+          "name": "_get_presidio",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 35,
+          "loc": 18,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.guardrails.pii.redact_pii",
+          "module": "hary.guardrails.pii",
+          "name": "redact_pii",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 64,
+          "loc": 25,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._provider",
+          "module": "hary.models.llm_factory",
+          "name": "_provider",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 91,
+          "loc": 2,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory.model_id_for_tier",
+          "module": "hary.models.llm_factory",
+          "name": "model_id_for_tier",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 123,
+          "loc": 11,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._model_for",
+          "module": "hary.models.llm_factory",
+          "name": "_model_for",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 136,
+          "loc": 9,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory.TokenUsage",
+          "module": "hary.models.llm_factory",
+          "name": "TokenUsage",
+          "kind": "class",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 147,
+          "loc": 19,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory.TokenUsage.total_input_tokens",
+          "module": "hary.models.llm_factory",
+          "name": "total_input_tokens",
+          "kind": "method",
+          "parent": "hary.models.llm_factory.TokenUsage",
+          "role": "client",
+          "stage": null,
+          "lineno": 163,
+          "loc": 3,
+          "decorators": [
+            "property"
+          ]
+        },
+        {
+          "qualname": "hary.models.llm_factory.estimate_cost",
+          "module": "hary.models.llm_factory",
+          "name": "estimate_cost",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 173,
+          "loc": 22,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._detect_provider_auth_mode",
+          "module": "hary.models.llm_factory",
+          "name": "_detect_provider_auth_mode",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 197,
+          "loc": 66,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._build_provider_llm",
+          "module": "hary.models.llm_factory",
+          "name": "_build_provider_llm",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 265,
+          "loc": 72,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._mask_secret",
+          "module": "hary.models.llm_factory",
+          "name": "_mask_secret",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 339,
+          "loc": 7,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._gateway_headers",
+          "module": "hary.models.llm_factory",
+          "name": "_gateway_headers",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 348,
+          "loc": 30,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._build_gateway_llm",
+          "module": "hary.models.llm_factory",
+          "name": "_build_gateway_llm",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 380,
+          "loc": 70,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._build_vendor_llm",
+          "module": "hary.models.llm_factory",
+          "name": "_build_vendor_llm",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 452,
+          "loc": 19,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._model_deprecates_temperature",
+          "module": "hary.models.llm_factory",
+          "name": "_model_deprecates_temperature",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 473,
+          "loc": 10,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory._build_for_model",
+          "module": "hary.models.llm_factory",
+          "name": "_build_for_model",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 485,
+          "loc": 47,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory.get_llm",
+          "module": "hary.models.llm_factory",
+          "name": "get_llm",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 535,
+          "loc": 10,
+          "decorators": [
+            "lru_cache"
+          ]
+        },
+        {
+          "qualname": "hary.models.llm_factory.get_llm_for_tier",
+          "module": "hary.models.llm_factory",
+          "name": "get_llm_for_tier",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 554,
+          "loc": 11,
+          "decorators": [
+            "lru_cache"
+          ]
+        },
+        {
+          "qualname": "hary.models.llm_factory.cached_system_block",
+          "module": "hary.models.llm_factory",
+          "name": "cached_system_block",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 567,
+          "loc": 10,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.models.llm_factory.extract_usage",
+          "module": "hary.models.llm_factory",
+          "name": "extract_usage",
+          "kind": "function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 579,
+          "loc": 38,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.prompts.query_rewrite.QueryRewritePrompt",
+          "module": "hary.prompts.query_rewrite",
+          "name": "QueryRewritePrompt",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 7,
+          "loc": 19,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.prompts.query_rewrite.QueryRewritePrompt.render",
+          "module": "hary.prompts.query_rewrite",
+          "name": "render",
+          "kind": "method",
+          "parent": "hary.prompts.query_rewrite.QueryRewritePrompt",
+          "role": "logic",
+          "stage": null,
+          "lineno": 23,
+          "loc": 3,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.transport.routes._resolve_rest_identity",
+          "module": "hary.transport.routes",
+          "name": "_resolve_rest_identity",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 60,
+          "loc": 26,
+          "decorators": []
+        },
+        {
+          "qualname": "hary.transport.routes.agent_chat",
+          "module": "hary.transport.routes",
+          "name": "agent_chat",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 91,
+          "loc": 21,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_chat",
+          "module": "hary.transport.routes",
+          "name": "hary_chat",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 117,
+          "loc": 35,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_status",
+          "module": "hary.transport.routes",
+          "name": "hary_status",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 155,
+          "loc": 2,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_pending_actions",
+          "module": "hary.transport.routes",
+          "name": "hary_pending_actions",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 160,
+          "loc": 2,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_activity_log",
+          "module": "hary.transport.routes",
+          "name": "hary_activity_log",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 165,
+          "loc": 2,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_scenarios",
+          "module": "hary.transport.routes",
+          "name": "hary_scenarios",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 170,
+          "loc": 2,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_reset",
+          "module": "hary.transport.routes",
+          "name": "hary_reset",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 175,
+          "loc": 4,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_trigger_scenario",
+          "module": "hary.transport.routes",
+          "name": "hary_trigger_scenario",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 182,
+          "loc": 14,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_approve_action",
+          "module": "hary.transport.routes",
+          "name": "hary_approve_action",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 199,
+          "loc": 15,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_welcome",
+          "module": "hary.transport.routes",
+          "name": "hary_welcome",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 217,
+          "loc": 20,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_list_memories",
+          "module": "hary.transport.routes",
+          "name": "hary_list_memories",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 240,
+          "loc": 23,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_delete_memory",
+          "module": "hary.transport.routes",
+          "name": "hary_delete_memory",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 266,
+          "loc": 20,
+          "decorators": [
+            "router.delete"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_forget_all",
+          "module": "hary.transport.routes",
+          "name": "hary_forget_all",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 289,
+          "loc": 18,
+          "decorators": [
+            "router.delete"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.agent_health",
+          "module": "hary.transport.routes",
+          "name": "agent_health",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 310,
+          "loc": 9,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "hary.transport.routes.hary_websocket",
+          "module": "hary.transport.routes",
+          "name": "hary_websocket",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 322,
+          "loc": 138,
+          "decorators": [
+            "router.websocket"
+          ]
+        },
+        {
+          "qualname": "config.settings",
+          "module": "config.settings",
+          "name": "settings",
+          "kind": "module",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 0,
+          "loc": 0,
+          "decorators": []
+        },
+        {
+          "qualname": "config.settings.Settings",
+          "module": "config.settings",
+          "name": "Settings",
+          "kind": "class",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 19,
+          "loc": 541,
+          "decorators": []
+        },
+        {
+          "qualname": "config.settings.Settings.parse_debug",
+          "module": "config.settings",
+          "name": "parse_debug",
+          "kind": "method",
+          "parent": "config.settings.Settings",
+          "role": "config",
+          "stage": null,
+          "lineno": 521,
+          "loc": 9,
+          "decorators": [
+            "field_validator",
+            "classmethod"
+          ]
+        },
+        {
+          "qualname": "config.settings.Settings.parse_string_list",
+          "module": "config.settings",
+          "name": "parse_string_list",
+          "kind": "method",
+          "parent": "config.settings.Settings",
+          "role": "config",
+          "stage": null,
+          "lineno": 540,
+          "loc": 9,
+          "decorators": [
+            "field_validator",
+            "classmethod"
+          ]
+        },
+        {
+          "qualname": "config.settings.Settings.build_redis_url",
+          "module": "config.settings",
+          "name": "build_redis_url",
+          "kind": "method",
+          "parent": "config.settings.Settings",
+          "role": "config",
+          "stage": null,
+          "lineno": 551,
+          "loc": 9,
+          "decorators": [
+            "model_validator"
+          ]
+        },
+        {
+          "qualname": "main",
+          "module": "main",
+          "name": "main",
+          "kind": "module",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 0,
+          "loc": 0,
+          "decorators": []
+        },
+        {
+          "qualname": "main.setup_logging",
+          "module": "main",
+          "name": "setup_logging",
+          "kind": "function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 19,
+          "loc": 8,
+          "decorators": []
+        },
+        {
+          "qualname": "main.create_app",
+          "module": "main",
+          "name": "create_app",
+          "kind": "function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 29,
+          "loc": 75,
+          "decorators": []
+        }
+      ],
+      "symbol_edges": [
+        {
+          "src": "hary.graph.builder._resolve_llm",
+          "dst": "hary.models.llm_factory.get_llm_for_tier",
+          "kind": "call",
+          "lineno": 175,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.builder.build_graph",
+          "dst": "hary.graph.builder.GraphBuilder",
+          "kind": "construct",
+          "lineno": 385,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode._synthesize_partial_answer",
+          "dst": "hary.graph.nodes.agent.AgentNode._flatten_for_salvage",
+          "kind": "call",
+          "lineno": 148,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "dst": "hary.graph.nodes.agent.AgentNode._synthesize_partial_answer",
+          "kind": "call",
+          "lineno": 163,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "dst": "hary.models.llm_factory.extract_usage",
+          "kind": "call",
+          "lineno": 169,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "dst": "hary.models.llm_factory.estimate_cost",
+          "kind": "call",
+          "lineno": 170,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "dst": "hary.models.llm_factory.model_id_for_tier",
+          "kind": "call",
+          "lineno": 171,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.graph.nodes.agent.AgentNode._partial_answer_result",
+          "kind": "call",
+          "lineno": 249,
+          "count": 2
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.models.llm_factory.cached_system_block",
+          "kind": "call",
+          "lineno": 319,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.graph.nodes.agent._is_retryable_llm_error",
+          "kind": "call",
+          "lineno": 370,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.models.llm_factory.extract_usage",
+          "kind": "call",
+          "lineno": 401,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.models.llm_factory.model_id_for_tier",
+          "kind": "call",
+          "lineno": 417,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.agent.AgentNode.__call__",
+          "dst": "hary.models.llm_factory.estimate_cost",
+          "kind": "call",
+          "lineno": 418,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.small_talk.SmallTalkNode.__call__",
+          "dst": "hary.models.llm_factory.extract_usage",
+          "kind": "call",
+          "lineno": 96,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.small_talk.SmallTalkNode.__call__",
+          "dst": "hary.models.llm_factory.estimate_cost",
+          "kind": "call",
+          "lineno": 98,
+          "count": 1
+        },
+        {
+          "src": "hary.graph.nodes.small_talk.SmallTalkNode.__call__",
+          "dst": "hary.models.llm_factory.model_id_for_tier",
+          "kind": "call",
+          "lineno": 98,
+          "count": 1
+        },
+        {
+          "src": "hary.guardrails.pii.redact_pii",
+          "dst": "hary.guardrails.pii._get_presidio",
+          "kind": "call",
+          "lineno": 66,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.model_id_for_tier",
+          "dst": "hary.models.llm_factory._provider",
+          "kind": "call",
+          "lineno": 130,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._model_for",
+          "dst": "hary.models.llm_factory.model_id_for_tier",
+          "kind": "call",
+          "lineno": 143,
+          "count": 2
+        },
+        {
+          "src": "hary.models.llm_factory._build_provider_llm",
+          "dst": "hary.models.llm_factory._detect_provider_auth_mode",
+          "kind": "call",
+          "lineno": 281,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_provider_llm",
+          "dst": "hary.models.llm_factory._model_deprecates_temperature",
+          "kind": "call",
+          "lineno": 334,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_gateway_llm",
+          "dst": "hary.models.llm_factory._gateway_headers",
+          "kind": "call",
+          "lineno": 409,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_gateway_llm",
+          "dst": "hary.models.llm_factory._mask_secret",
+          "kind": "call",
+          "lineno": 413,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_gateway_llm",
+          "dst": "hary.models.llm_factory._model_deprecates_temperature",
+          "kind": "call",
+          "lineno": 434,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_vendor_llm",
+          "dst": "hary.models.llm_factory._model_deprecates_temperature",
+          "kind": "call",
+          "lineno": 465,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_for_model",
+          "dst": "hary.models.llm_factory._provider",
+          "kind": "call",
+          "lineno": 489,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_for_model",
+          "dst": "hary.models.llm_factory._build_gateway_llm",
+          "kind": "call",
+          "lineno": 506,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_for_model",
+          "dst": "hary.models.llm_factory._detect_provider_auth_mode",
+          "kind": "call",
+          "lineno": 512,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_for_model",
+          "dst": "hary.models.llm_factory._build_provider_llm",
+          "kind": "call",
+          "lineno": 525,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory._build_for_model",
+          "dst": "hary.models.llm_factory._build_vendor_llm",
+          "kind": "call",
+          "lineno": 531,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.get_llm",
+          "dst": "hary.models.llm_factory._model_for",
+          "kind": "call",
+          "lineno": 543,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.get_llm",
+          "dst": "hary.models.llm_factory._build_for_model",
+          "kind": "call",
+          "lineno": 544,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.get_llm_for_tier",
+          "dst": "hary.models.llm_factory.model_id_for_tier",
+          "kind": "call",
+          "lineno": 563,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.get_llm_for_tier",
+          "dst": "hary.models.llm_factory._build_for_model",
+          "kind": "call",
+          "lineno": 564,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.extract_usage",
+          "dst": "hary.models.llm_factory._provider",
+          "kind": "call",
+          "lineno": 612,
+          "count": 1
+        },
+        {
+          "src": "hary.models.llm_factory.extract_usage",
+          "dst": "hary.models.llm_factory.TokenUsage",
+          "kind": "construct",
+          "lineno": 616,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.agent_chat",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 97,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.hary_chat",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 123,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.hary_welcome",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 229,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.hary_list_memories",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 251,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.hary_delete_memory",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 278,
+          "count": 1
+        },
+        {
+          "src": "hary.transport.routes.hary_forget_all",
+          "dst": "hary.transport.routes._resolve_rest_identity",
+          "kind": "call",
+          "lineno": 299,
+          "count": 1
+        },
+        {
+          "src": "config.settings",
+          "dst": "config.settings.Settings",
+          "kind": "construct",
+          "lineno": 562,
+          "count": 1
+        },
+        {
+          "src": "main.create_app",
+          "dst": "main.setup_logging",
+          "kind": "call",
+          "lineno": 39,
+          "count": 1
+        },
+        {
+          "src": "main",
+          "dst": "main.create_app",
+          "kind": "call",
+          "lineno": 107,
+          "count": 1
+        }
+      ],
+      "cycles": [],
+      "symbol_cycles": []
+    }
+  }
+}

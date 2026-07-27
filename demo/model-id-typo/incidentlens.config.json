@@ -1,0 +1,15 @@
+{
+  "_comment": "Dynamic demo: a real (misspelled) model-id failure. Nothing about this incident is hard-coded — analyze/watch reconstruct it from the logs. Swap these files for your service's real logs and it works the same.",
+  "architecture": "incidentlens.arch.json",
+  "logs": [
+    {"service": "hary-ai", "path": "logs/hary-ai.log"},
+    {"service": "hary-bff", "path": "logs/hary-bff.log"},
+    {"service": "hary-frontend", "path": "logs/hary-frontend.log"}
+  ],
+  "watch": {
+    "error_threshold": 3,
+    "window_seconds": 90,
+    "cooldown_seconds": 300,
+    "out_dir": "out"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "cache-stampede",
+  "title": "Search latency spike after a cache node comes back cold",
+  "description": "Synthetic demo fixture. A results-cache node restarts cold during a scheduled maintenance window and comes up with an empty keyspace. The read-through path's single-flight registry is in-process, so it comes up empty too: every miss opens its own backfill, the fan-out floods the index tier, index query admission saturates, database p95 climbs from 14 ms to 480 ms, and the search page returns 504s until the prewarm loop refills the ring. No deployment involved. No index-tier or database source is supplied, so whether the index tier could have absorbed the fan-out with more executor threads stays an open question."
+}

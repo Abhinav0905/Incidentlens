@@ -1,0 +1,123 @@
+flowchart LR
+  classDef endpoint fill:#16233b,stroke:#8ca8da,color:#dbe4f3;
+  classDef client fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9;
+  classDef config fill:#123230,stroke:#52c7b8,color:#cdeae6;
+  classDef middleware fill:#241b3a,stroke:#a78bda,color:#e2d9f5;
+  classDef graph_node fill:#12321f,stroke:#3fb68b,color:#cdeacd;
+  classDef logic fill:#1b212b,stroke:#55627e,color:#c9d1de;
+  classDef test fill:#241b1b,stroke:#8a6a6a,color:#e0cccc;
+  classDef module fill:#0f1420,stroke:#39435a,color:#8a93a3;
+  classDef failing fill:#4a1512,stroke:#e05b4d,color:#ffffff,stroke-width:3px;
+  classDef path fill:#0f3a33,stroke:#52c7b8,color:#dffaf4,stroke-width:2px;
+  classDef cycle fill:#3a2a12,stroke:#e3a73c,color:#f2e3c9,stroke-width:2px,stroke-dasharray:5 3;
+  subgraph m_hary_graph_builder["hary.graph.builder"]
+    subgraph c_hary_graph_builder_GraphBuilder["class GraphBuilder"]
+      n0["__init__()"]
+      n1["compile()"]
+    end
+      n2["_resolve_llm()"]
+      n3["build_graph()"]
+      n4["_build_runtime_context()"]
+  end
+  subgraph m_hary_graph_nodes_agent["hary.graph.nodes.agent"]
+    subgraph c_hary_graph_nodes_agent_AgentNode["class AgentNode"]
+      n5["__call__()"]
+      n6["_partial_answer_result()"]
+      n7["_synthesize_partial_answer()"]
+      n8["_flatten_for_salvage()"]
+      n9["__init__()"]
+    end
+      n10["_is_retryable_llm_error()"]
+  end
+  subgraph m_hary_graph_nodes_small_talk["hary.graph.nodes.small_talk"]
+    subgraph c_hary_graph_nodes_small_talk_SmallTalkNode["class SmallTalkNode"]
+      n11["__call__()"]
+      n12["__init__()"]
+    end
+  end
+  subgraph m_hary_models_llm_factory["hary.models.llm_factory"]
+    subgraph c_hary_models_llm_factory_TokenUsage["class TokenUsage"]
+      n13["total_input_tokens()"]
+    end
+      n14["get_llm_for_tier()"]
+      n15["_build_for_model()"]
+      n16["model_id_for_tier()"]
+      n17["extract_usage()"]
+      n18["_build_gateway_llm()"]
+      n19["_provider()"]
+      n20["estimate_cost()"]
+      n21["_build_provider_llm()"]
+      n22["_model_deprecates_temperature()"]
+      n23["_model_for()"]
+      n24["_detect_provider_auth_mode()"]
+      n25["_build_vendor_llm()"]
+      n26["get_llm()"]
+      n27["_mask_secret()"]
+      n28["_gateway_headers()"]
+      n29["cached_system_block()"]
+  end
+  n11 --> n16
+  n11 --> n17
+  n11 --> n20
+  n14 --> n15
+  n14 --> n16
+  n15 --> n18
+  n15 --> n19
+  n15 --> n21
+  n15 --> n24
+  n15 --> n25
+  n16 --> n19
+  n17 --> n19
+  n17 ==> n31
+  n18 --> n22
+  n18 --> n27
+  n18 --> n28
+  n2 --> n14
+  n21 --> n22
+  n21 --> n24
+  n23 --> n16
+  n25 --> n22
+  n26 --> n15
+  n26 --> n23
+  n3 ==> n30
+  n5 --> n10
+  n5 --> n16
+  n5 --> n17
+  n5 --> n20
+  n5 --> n29
+  n5 --> n6
+  n6 --> n16
+  n6 --> n17
+  n6 --> n20
+  n6 --> n7
+  n7 --> n8
+  class n0 logic;
+  class n1 logic;
+  class n2 client;
+  class n3 logic;
+  class n4 logic;
+  class n5 logic;
+  class n6 logic;
+  class n7 logic;
+  class n8 logic;
+  class n9 logic;
+  class n10 client;
+  class n11 logic;
+  class n12 logic;
+  class n13 path;
+  class n14 failing;
+  class n15 path;
+  class n16 path;
+  class n17 path;
+  class n18 path;
+  class n19 path;
+  class n20 path;
+  class n21 path;
+  class n22 path;
+  class n23 path;
+  class n24 path;
+  class n25 path;
+  class n26 path;
+  class n27 path;
+  class n28 path;
+  class n29 path;

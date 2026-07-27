@@ -1,0 +1,5 @@
+{
+  "name": "rate-limit-exhaustion",
+  "title": "Hary assistant dark: rate-limiter Redis pool exhausted, every chat 429'd at the front door",
+  "description": "Synthetic demo fixture. A lifecycle email send pushes about 4x normal chat volume into hary-platform, the autoscaler takes hary-ai from 6 to 14 replicas, and each replica opens its own 64-connection pool against the shared Redis that backs the request rate limiter. The shared instance stops accepting new connections, middleware.rate_limit can no longer read its counter, and its fail-closed branch answers every POST /v1/chat with HTTP 429 before the request reaches the graph, so no guardrail, router or gateway work is ever attempted. hary-bff turns the 429s into 502s and the assistant panel goes dark. Redis sits outside this account and ships no telemetry here, so whether the pool was undersized or a client is holding connections it never hands back stays unknown. The shallowest failure in the series: one lit box at the front door with the whole graph behind it dark."
+}

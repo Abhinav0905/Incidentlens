@@ -1,0 +1,13 @@
+2026-07-23 09:05:00,010 - main - INFO - HARY microservice starting. LLM tiers: fast=$FAST_TIER_MODEL_ID, balanced=$SMART_TIER_MODEL_ID. Startup health check passed.
+2026-07-23 09:06:12,441 - hary.models.llm_factory - INFO - Model registry warmed for tiers fast, balanced, deep. ModelProvider region us-east-1.
+2026-07-23 09:09:00,000 - config.loader - INFO - Config change: FAST_TIER_MODEL_ID environment variable set to 'us.modelhst.fast-tier-4-5-20251001-v1:0' for the hary deploy.
+2026-07-23 09:11:40,120 - middleware.rate_limit - INFO - Request admitted: 3 of 60 rpm for session s-8841.
+2026-07-23 09:11:44,300 - hary.guardrails.pii - INFO - PII scan clean; no redactions required.
+2026-07-23 09:11:47,650 - hary.graph.nodes.input_guardrail - INFO - Input guardrail passed; intent within policy.
+2026-07-23 09:11:50,020 - hary.graph.nodes.conversation_context - INFO - Conversation context assembled from 3 prior turns.
+2026-07-23 09:11:52,900 - hary.prompts.query_rewrite - INFO - Query rewrite requesting the fast tier through the shared LLM client.
+2026-07-23 09:12:04,517 - hary.models.llm_factory - ERROR - ModelProvider InvokeModel failed for tier 'fast': ValidationException - The provided model identifier is invalid: 'us.modelhst.fast-tier-4-5-20251001-v1:0'. Could not resolve a foundation model.
+2026-07-23 09:12:31,204 - hary.models.llm_factory - ERROR - Rebuild of the fast-tier client rejected again: ValidationException, model identifier invalid. The value did not match any ModelProvider foundation model or inference profile.
+2026-07-23 09:13:00,880 - hary.graph.nodes.agent - ERROR - Agent step aborted: no usable LLM for tier 'fast'; propagating failure to the response path.
+2026-07-23 09:13:20,559 - hary.models.llm_factory - ERROR - All fast-tier model build attempts exhausted; LLM calls failing fast and the circuit breaker is open.
+2026-07-23 09:16:00,733 - hary.models.llm_factory - ERROR - Model identifier from FAST_TIER_MODEL_ID does not match any ModelProvider foundation model; verify the env var value against the model catalog ('modelhst' should read 'vendor').

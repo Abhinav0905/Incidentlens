@@ -1,0 +1,46 @@
+{
+  "system": "messaging-platform",
+  "services": [
+    {"name": "member-portal", "owner": "web-team", "depends_on": ["notification-dispatch"], "user_facing": true},
+    {"name": "notification-dispatch", "owner": "messaging-team", "depends_on": ["stream-consumer", "delivery-gateway"]},
+    {
+      "name": "stream-consumer",
+      "owner": "streaming-team",
+      "depends_on": ["event-queue", "schema-registry"],
+      "internals": {
+        "entry": "poll",
+        "stages": [
+          {"name": "poll", "modules": ["stream.consumer.poller"], "description": "partition poll loop"},
+          {"name": "batch-assembler", "modules": ["stream.consumer.batch"], "description": "batch assembly"},
+          {"name": "schema-resolve", "modules": ["stream.codec.schema", "stream.codec.registry_cache"], "description": "writer-schema lookup"},
+          {"name": "decode", "modules": ["stream.codec.decoder", "stream.codec.coercion"], "description": "payload decode"},
+          {"name": "validate", "modules": ["stream.handlers.validate"], "description": "field validation"},
+          {"name": "route", "modules": ["stream.handlers.router"], "description": "event routing"},
+          {"name": "enrich", "modules": ["stream.handlers.enrich"], "description": "member enrichment"},
+          {"name": "sink-notify", "modules": ["stream.sinks.notification"], "description": "notification hand-off"},
+          {"name": "sink-audit", "modules": ["stream.sinks.audit_log"], "description": "audit trail write"},
+          {"name": "offset-commit", "modules": ["stream.consumer.offsets"], "description": "offset commit"},
+          {"name": "dead-letter", "modules": ["stream.sinks.dead_letter"], "description": "poison-record quarantine"}
+        ],
+        "edges": [
+          ["poll", "batch-assembler"],
+          ["batch-assembler", "schema-resolve"],
+          ["schema-resolve", "decode"],
+          ["decode", "validate"],
+          ["decode", "dead-letter"],
+          ["validate", "route"],
+          ["validate", "dead-letter"],
+          ["route", "enrich"],
+          ["enrich", "sink-notify"],
+          ["enrich", "sink-audit"],
+          ["sink-notify", "offset-commit"],
+          ["sink-audit", "offset-commit"]
+        ]
+      }
+    },
+    {"name": "checkout-service", "owner": "orders-team", "depends_on": ["event-queue"]},
+    {"name": "event-queue", "owner": "platform-team · external", "depends_on": []},
+    {"name": "schema-registry", "owner": "platform-team · external", "depends_on": []},
+    {"name": "delivery-gateway", "owner": "external", "depends_on": []}
+  ]
+}

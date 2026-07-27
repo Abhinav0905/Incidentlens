@@ -1,0 +1,42 @@
+{
+  "system": "search-platform",
+  "services": [
+    {"name": "web", "owner": "web-team", "depends_on": ["search-api"], "user_facing": true},
+    {"name": "search-api", "owner": "search-team", "depends_on": ["results-cache", "index-service", "ranking-service"]},
+    {"name": "ranking-service", "owner": "relevance-team", "depends_on": []},
+    {"name": "index-service", "owner": "search-team", "depends_on": ["search-db"]},
+    {
+      "name": "results-cache",
+      "owner": "platform-team",
+      "depends_on": ["index-service"],
+      "internals": {
+        "entry": "http-entry",
+        "stages": [
+          {"name": "http-entry", "modules": ["search.api.results"], "description": "POST /v1/results:lookup"},
+          {"name": "admission", "modules": ["search.api.middleware.admission"], "description": "inflight admission and shed"},
+          {"name": "key-normalize", "modules": ["search.cache.keys"], "description": "query fingerprinting"},
+          {"name": "store-read", "modules": ["search.cache.store"], "description": "memory-store multi-get"},
+          {"name": "readthrough", "modules": ["search.cache.readthrough"], "description": "miss coalescing and backfill"},
+          {"name": "backfill-fanout", "modules": ["search.index.backfill"], "description": "bounded backfill pool"},
+          {"name": "index-client", "modules": ["search.index.client"], "description": "index-tier query client"},
+          {"name": "store-write", "modules": ["search.cache.writeback"], "description": "set-with-ttl writeback"},
+          {"name": "serialize", "modules": ["search.api.serialize"], "description": "response encoding"},
+          {"name": "warmup", "modules": ["search.cache.warmup"], "description": "background prewarm loop"}
+        ],
+        "edges": [
+          ["http-entry", "admission"],
+          ["admission", "key-normalize"],
+          ["key-normalize", "store-read"],
+          ["store-read", "readthrough"],
+          ["readthrough", "backfill-fanout"],
+          ["backfill-fanout", "index-client"],
+          ["index-client", "store-write"],
+          ["store-write", "serialize"],
+          ["readthrough", "serialize"],
+          ["warmup", "backfill-fanout"]
+        ]
+      }
+    },
+    {"name": "search-db", "owner": "data-team", "depends_on": []}
+  ]
+}

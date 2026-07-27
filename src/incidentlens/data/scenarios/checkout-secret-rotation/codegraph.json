@@ -1,0 +1,1394 @@
+{
+  "services": {
+    "payment-api": {
+      "service": "payment-api",
+      "modules": [
+        {
+          "name": "payments.api.app",
+          "kind": "endpoint",
+          "stage": "http-api",
+          "defs": [
+            "create_app",
+            "register_routes"
+          ],
+          "loc": 96,
+          "fan_in": 0,
+          "fan_out": 4,
+          "blast_radius": 0,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.api.routes",
+          "kind": "endpoint",
+          "stage": "http-api",
+          "defs": [
+            "create_charge",
+            "get_charge",
+            "healthz"
+          ],
+          "loc": 184,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.api.middleware",
+          "kind": "middleware",
+          "stage": "request-auth",
+          "defs": [
+            "CallerAuthMiddleware"
+          ],
+          "loc": 132,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 1,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.api.schemas",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "ChargeRequest",
+            "ChargeResponse",
+            "ErrorBody"
+          ],
+          "loc": 88,
+          "fan_in": 1,
+          "fan_out": 0,
+          "blast_radius": 2,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.services.charge",
+          "kind": "graph-node",
+          "stage": "charge-service",
+          "defs": [
+            "create_charge",
+            "_capture",
+            "_void"
+          ],
+          "loc": 261,
+          "fan_in": 1,
+          "fan_out": 4,
+          "blast_radius": 2,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.services.idempotency",
+          "kind": "graph-node",
+          "stage": "idempotency",
+          "defs": [
+            "reserve_key",
+            "release_key"
+          ],
+          "loc": 118,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.services.refund",
+          "kind": "graph-node",
+          "stage": null,
+          "defs": [
+            "create_refund"
+          ],
+          "loc": 143,
+          "fan_in": 0,
+          "fan_out": 2,
+          "blast_radius": 0,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.db.session",
+          "kind": "module",
+          "stage": "db-session",
+          "defs": [
+            "open_session",
+            "UnitOfWork"
+          ],
+          "loc": 176,
+          "fan_in": 5,
+          "fan_out": 3,
+          "blast_radius": 8,
+          "in_cycle": true
+        },
+        {
+          "name": "payments.db.pool",
+          "kind": "client",
+          "stage": "db-pool",
+          "defs": [
+            "acquire",
+            "warm_pool",
+            "PoolStats"
+          ],
+          "loc": 204,
+          "fan_in": 2,
+          "fan_out": 1,
+          "blast_radius": 10,
+          "in_cycle": true
+        },
+        {
+          "name": "payments.db.credentials",
+          "kind": "config",
+          "stage": "db-credentials",
+          "defs": [
+            "get_db_credentials",
+            "_decode_secret_payload",
+            "invalidate_cached_credentials",
+            "CredentialCache"
+          ],
+          "loc": 168,
+          "fan_in": 1,
+          "fan_out": 3,
+          "blast_radius": 10,
+          "in_cycle": true
+        },
+        {
+          "name": "payments.db.ledger",
+          "kind": "module",
+          "stage": "ledger-write",
+          "defs": [
+            "write_entry",
+            "LedgerEntry"
+          ],
+          "loc": 232,
+          "fan_in": 1,
+          "fan_out": 2,
+          "blast_radius": 8,
+          "in_cycle": true
+        },
+        {
+          "name": "payments.db.models",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "Charge",
+            "Refund",
+            "LedgerRow"
+          ],
+          "loc": 154,
+          "fan_in": 2,
+          "fan_out": 0,
+          "blast_radius": 9,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.config.secrets",
+          "kind": "client",
+          "stage": "secret-provider",
+          "defs": [
+            "fetch_secret",
+            "SecretStoreClient"
+          ],
+          "loc": 149,
+          "fan_in": 2,
+          "fan_out": 1,
+          "blast_radius": 12,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.config.settings",
+          "kind": "config",
+          "stage": null,
+          "defs": [
+            "Settings",
+            "load_settings"
+          ],
+          "loc": 112,
+          "fan_in": 3,
+          "fan_out": 0,
+          "blast_radius": 13,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.clients.processor",
+          "kind": "client",
+          "stage": "gateway-client",
+          "defs": [
+            "authorize",
+            "capture"
+          ],
+          "loc": 197,
+          "fan_in": 3,
+          "fan_out": 1,
+          "blast_radius": 6,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.workers.settlement",
+          "kind": "graph-node",
+          "stage": "settlement-worker",
+          "defs": [
+            "run_settlement_loop",
+            "_settle_batch"
+          ],
+          "loc": 188,
+          "fan_in": 1,
+          "fan_out": 3,
+          "blast_radius": 4,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.workers.retry",
+          "kind": "graph-node",
+          "stage": "retry-scheduler",
+          "defs": [
+            "schedule_retry",
+            "_next_backoff"
+          ],
+          "loc": 104,
+          "fan_in": 1,
+          "fan_out": 1,
+          "blast_radius": 3,
+          "in_cycle": false
+        },
+        {
+          "name": "payments.telemetry.logging",
+          "kind": "module",
+          "stage": null,
+          "defs": [
+            "configure_logging",
+            "bind_request_id"
+          ],
+          "loc": 67,
+          "fan_in": 3,
+          "fan_out": 0,
+          "blast_radius": 6,
+          "in_cycle": false
+        }
+      ],
+      "edges": [
+        {
+          "src": "payments.api.app",
+          "dst": "payments.api.routes",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "payments.api.app",
+          "dst": "payments.api.middleware",
+          "kind": "import",
+          "symbols": [],
+          "count": 1
+        },
+        {
+          "src": "payments.api.app",
+          "dst": "payments.telemetry.logging",
+          "kind": "call",
+          "symbols": [
+            "configure_logging"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.api.app",
+          "dst": "payments.config.settings",
+          "kind": "call",
+          "symbols": [
+            "load_settings"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.api.routes",
+          "dst": "payments.api.schemas",
+          "kind": "import",
+          "symbols": [
+            "ChargeRequest",
+            "ChargeResponse"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.api.routes",
+          "dst": "payments.services.charge",
+          "kind": "call",
+          "symbols": [
+            "create_charge"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.api.middleware",
+          "dst": "payments.telemetry.logging",
+          "kind": "call",
+          "symbols": [
+            "bind_request_id"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge",
+          "dst": "payments.services.idempotency",
+          "kind": "call",
+          "symbols": [
+            "reserve_key"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge",
+          "dst": "payments.db.session",
+          "kind": "call",
+          "symbols": [
+            "open_session"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge",
+          "dst": "payments.clients.processor",
+          "kind": "call",
+          "symbols": [
+            "authorize",
+            "capture"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge",
+          "dst": "payments.workers.retry",
+          "kind": "call",
+          "symbols": [
+            "schedule_retry"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.refund",
+          "dst": "payments.db.session",
+          "kind": "call",
+          "symbols": [
+            "open_session"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.refund",
+          "dst": "payments.clients.processor",
+          "kind": "call",
+          "symbols": [
+            "authorize"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.services.idempotency",
+          "dst": "payments.db.session",
+          "kind": "call",
+          "symbols": [
+            "open_session"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.session",
+          "dst": "payments.db.pool",
+          "kind": "call",
+          "symbols": [
+            "acquire"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.session",
+          "dst": "payments.db.ledger",
+          "kind": "call",
+          "symbols": [
+            "write_entry"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.session",
+          "dst": "payments.db.models",
+          "kind": "import",
+          "symbols": [
+            "Charge",
+            "LedgerRow"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.ledger",
+          "dst": "payments.db.session",
+          "kind": "import",
+          "symbols": [
+            "UnitOfWork"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.ledger",
+          "dst": "payments.db.models",
+          "kind": "import",
+          "symbols": [
+            "LedgerRow"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.pool",
+          "dst": "payments.db.credentials",
+          "kind": "call",
+          "symbols": [
+            "get_db_credentials"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials",
+          "dst": "payments.db.pool",
+          "kind": "dynamic-import",
+          "symbols": [
+            "warm_pool"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials",
+          "dst": "payments.config.secrets",
+          "kind": "call",
+          "symbols": [
+            "fetch_secret"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials",
+          "dst": "payments.config.settings",
+          "kind": "call",
+          "symbols": [
+            "Settings"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.config.secrets",
+          "dst": "payments.config.settings",
+          "kind": "call",
+          "symbols": [
+            "load_settings"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.clients.processor",
+          "dst": "payments.config.secrets",
+          "kind": "call",
+          "symbols": [
+            "fetch_secret"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement",
+          "dst": "payments.db.session",
+          "kind": "call",
+          "symbols": [
+            "open_session"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement",
+          "dst": "payments.clients.processor",
+          "kind": "call",
+          "symbols": [
+            "capture"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement",
+          "dst": "payments.telemetry.logging",
+          "kind": "call",
+          "symbols": [
+            "bind_request_id"
+          ],
+          "count": 1
+        },
+        {
+          "src": "payments.workers.retry",
+          "dst": "payments.workers.settlement",
+          "kind": "call",
+          "symbols": [
+            "run_settlement_loop"
+          ],
+          "count": 1
+        }
+      ],
+      "symbols": [
+        {
+          "qualname": "payments.api.app.create_app",
+          "module": "payments.api.app",
+          "name": "create_app",
+          "kind": "function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 22,
+          "loc": 44,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.api.app.register_routes",
+          "module": "payments.api.app",
+          "name": "register_routes",
+          "kind": "function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 68,
+          "loc": 26,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.api.routes.create_charge",
+          "module": "payments.api.routes",
+          "name": "create_charge",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 41,
+          "loc": 62,
+          "decorators": [
+            "router.post"
+          ]
+        },
+        {
+          "qualname": "payments.api.routes.get_charge",
+          "module": "payments.api.routes",
+          "name": "get_charge",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 108,
+          "loc": 28,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "payments.api.routes.healthz",
+          "module": "payments.api.routes",
+          "name": "healthz",
+          "kind": "async-function",
+          "parent": null,
+          "role": "endpoint",
+          "stage": null,
+          "lineno": 142,
+          "loc": 12,
+          "decorators": [
+            "router.get"
+          ]
+        },
+        {
+          "qualname": "payments.api.middleware.CallerAuthMiddleware",
+          "module": "payments.api.middleware",
+          "name": "CallerAuthMiddleware",
+          "kind": "class",
+          "parent": null,
+          "role": "middleware",
+          "stage": null,
+          "lineno": 28,
+          "loc": 96,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.api.middleware.CallerAuthMiddleware.__call__",
+          "module": "payments.api.middleware",
+          "name": "__call__",
+          "kind": "async-method",
+          "parent": "payments.api.middleware.CallerAuthMiddleware",
+          "role": "middleware",
+          "stage": null,
+          "lineno": 44,
+          "loc": 52,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.api.middleware.CallerAuthMiddleware._verify_scope",
+          "module": "payments.api.middleware",
+          "name": "_verify_scope",
+          "kind": "method",
+          "parent": "payments.api.middleware.CallerAuthMiddleware",
+          "role": "middleware",
+          "stage": null,
+          "lineno": 99,
+          "loc": 21,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.charge.create_charge",
+          "module": "payments.services.charge",
+          "name": "create_charge",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 58,
+          "loc": 88,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.charge._capture",
+          "module": "payments.services.charge",
+          "name": "_capture",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 151,
+          "loc": 46,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.charge._void",
+          "module": "payments.services.charge",
+          "name": "_void",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 201,
+          "loc": 33,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.idempotency.reserve_key",
+          "module": "payments.services.idempotency",
+          "name": "reserve_key",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 34,
+          "loc": 42,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.idempotency.release_key",
+          "module": "payments.services.idempotency",
+          "name": "release_key",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 79,
+          "loc": 18,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.services.refund.create_refund",
+          "module": "payments.services.refund",
+          "name": "create_refund",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 37,
+          "loc": 61,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.session.open_session",
+          "module": "payments.db.session",
+          "name": "open_session",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 46,
+          "loc": 38,
+          "decorators": [
+            "asynccontextmanager"
+          ]
+        },
+        {
+          "qualname": "payments.db.session.UnitOfWork",
+          "module": "payments.db.session",
+          "name": "UnitOfWork",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 88,
+          "loc": 84,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.session.UnitOfWork.commit",
+          "module": "payments.db.session",
+          "name": "commit",
+          "kind": "async-method",
+          "parent": "payments.db.session.UnitOfWork",
+          "role": "logic",
+          "stage": null,
+          "lineno": 104,
+          "loc": 29,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.session.UnitOfWork.rollback",
+          "module": "payments.db.session",
+          "name": "rollback",
+          "kind": "async-method",
+          "parent": "payments.db.session.UnitOfWork",
+          "role": "logic",
+          "stage": null,
+          "lineno": 136,
+          "loc": 19,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.pool.acquire",
+          "module": "payments.db.pool",
+          "name": "acquire",
+          "kind": "async-function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 96,
+          "loc": 58,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.pool.warm_pool",
+          "module": "payments.db.pool",
+          "name": "warm_pool",
+          "kind": "async-function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 158,
+          "loc": 34,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.pool.PoolStats",
+          "module": "payments.db.pool",
+          "name": "PoolStats",
+          "kind": "class",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 24,
+          "loc": 26,
+          "decorators": [
+            "dataclass"
+          ]
+        },
+        {
+          "qualname": "payments.db.pool.PoolStats.snapshot",
+          "module": "payments.db.pool",
+          "name": "snapshot",
+          "kind": "method",
+          "parent": "payments.db.pool.PoolStats",
+          "role": "client",
+          "stage": null,
+          "lineno": 33,
+          "loc": 14,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials.get_db_credentials",
+          "module": "payments.db.credentials",
+          "name": "get_db_credentials",
+          "kind": "function",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 74,
+          "loc": 52,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials._decode_secret_payload",
+          "module": "payments.db.credentials",
+          "name": "_decode_secret_payload",
+          "kind": "function",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 139,
+          "loc": 31,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials.invalidate_cached_credentials",
+          "module": "payments.db.credentials",
+          "name": "invalidate_cached_credentials",
+          "kind": "function",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 158,
+          "loc": 18,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials.CredentialCache",
+          "module": "payments.db.credentials",
+          "name": "CredentialCache",
+          "kind": "class",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 28,
+          "loc": 44,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials.CredentialCache.lookup",
+          "module": "payments.db.credentials",
+          "name": "lookup",
+          "kind": "method",
+          "parent": "payments.db.credentials.CredentialCache",
+          "role": "config",
+          "stage": null,
+          "lineno": 41,
+          "loc": 14,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.credentials.CredentialCache.store",
+          "module": "payments.db.credentials",
+          "name": "store",
+          "kind": "method",
+          "parent": "payments.db.credentials.CredentialCache",
+          "role": "config",
+          "stage": null,
+          "lineno": 57,
+          "loc": 11,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.ledger.write_entry",
+          "module": "payments.db.ledger",
+          "name": "write_entry",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 62,
+          "loc": 54,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.db.ledger.LedgerEntry",
+          "module": "payments.db.ledger",
+          "name": "LedgerEntry",
+          "kind": "class",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 21,
+          "loc": 30,
+          "decorators": [
+            "dataclass"
+          ]
+        },
+        {
+          "qualname": "payments.config.secrets.fetch_secret",
+          "module": "payments.config.secrets",
+          "name": "fetch_secret",
+          "kind": "async-function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 58,
+          "loc": 66,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.config.secrets.SecretStoreClient",
+          "module": "payments.config.secrets",
+          "name": "SecretStoreClient",
+          "kind": "class",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 26,
+          "loc": 88,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.config.secrets.SecretStoreClient.get_secret_value",
+          "module": "payments.config.secrets",
+          "name": "get_secret_value",
+          "kind": "async-method",
+          "parent": "payments.config.secrets.SecretStoreClient",
+          "role": "client",
+          "stage": null,
+          "lineno": 39,
+          "loc": 41,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.config.settings.load_settings",
+          "module": "payments.config.settings",
+          "name": "load_settings",
+          "kind": "function",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 88,
+          "loc": 34,
+          "decorators": [
+            "lru_cache"
+          ]
+        },
+        {
+          "qualname": "payments.config.settings.Settings",
+          "module": "payments.config.settings",
+          "name": "Settings",
+          "kind": "class",
+          "parent": null,
+          "role": "config",
+          "stage": null,
+          "lineno": 24,
+          "loc": 62,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.config.settings.Settings.db_secret_reference",
+          "module": "payments.config.settings",
+          "name": "db_secret_reference",
+          "kind": "method",
+          "parent": "payments.config.settings.Settings",
+          "role": "config",
+          "stage": null,
+          "lineno": 51,
+          "loc": 9,
+          "decorators": [
+            "property"
+          ]
+        },
+        {
+          "qualname": "payments.clients.processor.authorize",
+          "module": "payments.clients.processor",
+          "name": "authorize",
+          "kind": "async-function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 64,
+          "loc": 58,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.clients.processor.capture",
+          "module": "payments.clients.processor",
+          "name": "capture",
+          "kind": "async-function",
+          "parent": null,
+          "role": "client",
+          "stage": null,
+          "lineno": 126,
+          "loc": 44,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.workers.settlement.run_settlement_loop",
+          "module": "payments.workers.settlement",
+          "name": "run_settlement_loop",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 38,
+          "loc": 62,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.workers.settlement._settle_batch",
+          "module": "payments.workers.settlement",
+          "name": "_settle_batch",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 104,
+          "loc": 54,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.workers.retry.schedule_retry",
+          "module": "payments.workers.retry",
+          "name": "schedule_retry",
+          "kind": "async-function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 31,
+          "loc": 38,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.workers.retry._next_backoff",
+          "module": "payments.workers.retry",
+          "name": "_next_backoff",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 74,
+          "loc": 16,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.telemetry.logging.configure_logging",
+          "module": "payments.telemetry.logging",
+          "name": "configure_logging",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 18,
+          "loc": 28,
+          "decorators": []
+        },
+        {
+          "qualname": "payments.telemetry.logging.bind_request_id",
+          "module": "payments.telemetry.logging",
+          "name": "bind_request_id",
+          "kind": "function",
+          "parent": null,
+          "role": "logic",
+          "stage": null,
+          "lineno": 51,
+          "loc": 14,
+          "decorators": []
+        }
+      ],
+      "symbol_edges": [
+        {
+          "src": "payments.api.app.create_app",
+          "dst": "payments.api.app.register_routes",
+          "kind": "call",
+          "lineno": 34,
+          "count": 1
+        },
+        {
+          "src": "payments.api.app.create_app",
+          "dst": "payments.telemetry.logging.configure_logging",
+          "kind": "call",
+          "lineno": 28,
+          "count": 1
+        },
+        {
+          "src": "payments.api.app.create_app",
+          "dst": "payments.config.settings.load_settings",
+          "kind": "call",
+          "lineno": 26,
+          "count": 1
+        },
+        {
+          "src": "payments.api.app.register_routes",
+          "dst": "payments.api.routes.healthz",
+          "kind": "call",
+          "lineno": 74,
+          "count": 1
+        },
+        {
+          "src": "payments.api.middleware.CallerAuthMiddleware.__call__",
+          "dst": "payments.api.middleware.CallerAuthMiddleware._verify_scope",
+          "kind": "call",
+          "lineno": 61,
+          "count": 1
+        },
+        {
+          "src": "payments.api.middleware.CallerAuthMiddleware.__call__",
+          "dst": "payments.telemetry.logging.bind_request_id",
+          "kind": "call",
+          "lineno": 52,
+          "count": 1
+        },
+        {
+          "src": "payments.api.routes.create_charge",
+          "dst": "payments.services.charge.create_charge",
+          "kind": "call",
+          "lineno": 76,
+          "count": 1
+        },
+        {
+          "src": "payments.api.routes.get_charge",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 121,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge.create_charge",
+          "dst": "payments.services.idempotency.reserve_key",
+          "kind": "call",
+          "lineno": 71,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge.create_charge",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 84,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge.create_charge",
+          "dst": "payments.clients.processor.authorize",
+          "kind": "call",
+          "lineno": 96,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge.create_charge",
+          "dst": "payments.services.charge._capture",
+          "kind": "call",
+          "lineno": 118,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge.create_charge",
+          "dst": "payments.workers.retry.schedule_retry",
+          "kind": "call",
+          "lineno": 131,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge._capture",
+          "dst": "payments.clients.processor.capture",
+          "kind": "call",
+          "lineno": 168,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge._capture",
+          "dst": "payments.db.ledger.write_entry",
+          "kind": "call",
+          "lineno": 181,
+          "count": 1
+        },
+        {
+          "src": "payments.services.charge._void",
+          "dst": "payments.db.ledger.write_entry",
+          "kind": "call",
+          "lineno": 219,
+          "count": 1
+        },
+        {
+          "src": "payments.services.idempotency.reserve_key",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 48,
+          "count": 1
+        },
+        {
+          "src": "payments.services.idempotency.release_key",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 86,
+          "count": 1
+        },
+        {
+          "src": "payments.services.refund.create_refund",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 52,
+          "count": 1
+        },
+        {
+          "src": "payments.services.refund.create_refund",
+          "dst": "payments.clients.processor.authorize",
+          "kind": "call",
+          "lineno": 66,
+          "count": 1
+        },
+        {
+          "src": "payments.db.session.open_session",
+          "dst": "payments.db.pool.acquire",
+          "kind": "call",
+          "lineno": 58,
+          "count": 1
+        },
+        {
+          "src": "payments.db.session.open_session",
+          "dst": "payments.db.session.UnitOfWork",
+          "kind": "construct",
+          "lineno": 71,
+          "count": 1
+        },
+        {
+          "src": "payments.db.session.UnitOfWork.commit",
+          "dst": "payments.db.ledger.write_entry",
+          "kind": "call",
+          "lineno": 118,
+          "count": 1
+        },
+        {
+          "src": "payments.db.pool.acquire",
+          "dst": "payments.db.credentials.get_db_credentials",
+          "kind": "call",
+          "lineno": 118,
+          "count": 1
+        },
+        {
+          "src": "payments.db.pool.acquire",
+          "dst": "payments.db.pool.PoolStats.snapshot",
+          "kind": "call",
+          "lineno": 131,
+          "count": 1
+        },
+        {
+          "src": "payments.db.pool.warm_pool",
+          "dst": "payments.db.credentials.get_db_credentials",
+          "kind": "call",
+          "lineno": 166,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.get_db_credentials",
+          "dst": "payments.db.credentials.CredentialCache.lookup",
+          "kind": "call",
+          "lineno": 82,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.get_db_credentials",
+          "dst": "payments.config.secrets.fetch_secret",
+          "kind": "call",
+          "lineno": 101,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.get_db_credentials",
+          "dst": "payments.db.credentials._decode_secret_payload",
+          "kind": "call",
+          "lineno": 113,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.get_db_credentials",
+          "dst": "payments.db.credentials.invalidate_cached_credentials",
+          "kind": "call",
+          "lineno": 121,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.get_db_credentials",
+          "dst": "payments.db.credentials.CredentialCache.store",
+          "kind": "call",
+          "lineno": 124,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials._decode_secret_payload",
+          "dst": "payments.config.settings.Settings.db_secret_reference",
+          "kind": "call",
+          "lineno": 148,
+          "count": 1
+        },
+        {
+          "src": "payments.db.credentials.invalidate_cached_credentials",
+          "dst": "payments.db.pool.warm_pool",
+          "kind": "dynamic",
+          "lineno": 170,
+          "count": 1
+        },
+        {
+          "src": "payments.config.secrets.fetch_secret",
+          "dst": "payments.config.secrets.SecretStoreClient.get_secret_value",
+          "kind": "call",
+          "lineno": 79,
+          "count": 1
+        },
+        {
+          "src": "payments.config.secrets.SecretStoreClient.get_secret_value",
+          "dst": "payments.config.settings.load_settings",
+          "kind": "call",
+          "lineno": 47,
+          "count": 1
+        },
+        {
+          "src": "payments.config.settings.load_settings",
+          "dst": "payments.config.settings.Settings",
+          "kind": "construct",
+          "lineno": 96,
+          "count": 1
+        },
+        {
+          "src": "payments.clients.processor.authorize",
+          "dst": "payments.config.secrets.fetch_secret",
+          "kind": "call",
+          "lineno": 78,
+          "count": 1
+        },
+        {
+          "src": "payments.clients.processor.capture",
+          "dst": "payments.config.secrets.fetch_secret",
+          "kind": "call",
+          "lineno": 139,
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement.run_settlement_loop",
+          "dst": "payments.workers.settlement._settle_batch",
+          "kind": "call",
+          "lineno": 66,
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement._settle_batch",
+          "dst": "payments.db.session.open_session",
+          "kind": "call",
+          "lineno": 112,
+          "count": 1
+        },
+        {
+          "src": "payments.workers.settlement._settle_batch",
+          "dst": "payments.clients.processor.capture",
+          "kind": "call",
+          "lineno": 128,
+          "count": 1
+        },
+        {
+          "src": "payments.workers.retry.schedule_retry",
+          "dst": "payments.workers.retry._next_backoff",
+          "kind": "call",
+          "lineno": 44,
+          "count": 1
+        },
+        {
+          "src": "payments.workers.retry.schedule_retry",
+          "dst": "payments.workers.settlement.run_settlement_loop",
+          "kind": "call",
+          "lineno": 58,
+          "count": 1
+        }
+      ],
+      "cycles": [
+        [
+          "payments.db.credentials",
+          "payments.db.pool"
+        ],
+        [
+          "payments.db.session",
+          "payments.db.ledger"
+        ]
+      ],
+      "symbol_cycles": [
+        [
+          "payments.db.credentials.get_db_credentials",
+          "payments.db.credentials.invalidate_cached_credentials",
+          "payments.db.pool.warm_pool"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "checkout-secret-rotation",
+  "title": "Checkout failure after a payment-api deployment repointed its database secret",
+  "description": "Synthetic demo fixture. A payment-api deployment repoints the service at a new database secret reference; the credential resolver hands the pool a password the payment-db role rejects with 28P01, the result is memoised so retries amplify, order-api's worker pool saturates and checkout starts failing for shoppers. No database-side or secret-store audit logs are supplied, so whether the new secret was never applied to the database role or the wrong value was stored stays an open question."
+}

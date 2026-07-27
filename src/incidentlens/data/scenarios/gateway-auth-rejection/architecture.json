@@ -1,0 +1,47 @@
+{
+  "system": "hary-platform",
+  "services": [
+    {"name": "hary-frontend", "owner": "web-team", "depends_on": ["hary-bff"], "user_facing": true},
+    {"name": "hary-bff", "owner": "platform-team", "depends_on": ["hary-application-backend", "hary-ai"]},
+    {"name": "hary-application-backend", "owner": "backend-team", "depends_on": ["hary-db"]},
+    {
+      "name": "hary-ai",
+      "owner": "ml-team",
+      "depends_on": ["llm-gateway"],
+      "internals": {
+        "entry": "rate-limit",
+        "stages": [
+          {"name": "rate-limit", "modules": ["middleware.rate_limit"], "description": "middleware"},
+          {"name": "chat-endpoint", "modules": ["hary.transport.routes", "main"], "description": "POST /v1/chat"},
+          {"name": "pii-scanner", "modules": ["hary.guardrails.pii"], "description": "input PII scan"},
+          {"name": "input-guardrail", "modules": ["hary.graph.nodes.input_guardrail"], "description": "policy guardrail"},
+          {"name": "conversation-context", "modules": ["hary.graph.nodes.conversation_context"], "description": "context assembly"},
+          {"name": "query-rewriter", "modules": ["hary.prompts.query_rewrite"], "description": "haiku rewrite"},
+          {"name": "router", "modules": ["hary.graph.nodes.router"], "description": "intent routing"},
+          {"name": "agentic", "modules": ["hary.graph.nodes.agent"], "description": "agent loop"},
+          {"name": "small-talk", "modules": ["hary.graph.nodes.small_talk"], "description": "chit-chat branch"},
+          {"name": "llm-client", "modules": ["hary.models.llm_factory"], "description": "shared LLM transport"},
+          {"name": "output-guardrail", "modules": ["hary.graph.nodes.output_guardrail"], "description": "response guardrail"}
+        ],
+        "edges": [
+          ["rate-limit", "chat-endpoint"],
+          ["chat-endpoint", "pii-scanner"],
+          ["pii-scanner", "input-guardrail"],
+          ["input-guardrail", "conversation-context"],
+          ["conversation-context", "query-rewriter"],
+          ["query-rewriter", "router"],
+          ["router", "agentic"],
+          ["router", "small-talk"],
+          ["query-rewriter", "llm-client"],
+          ["agentic", "llm-client"],
+          ["small-talk", "llm-client"],
+          ["agentic", "output-guardrail"],
+          ["small-talk", "output-guardrail"]
+        ]
+      }
+    },
+    {"name": "llm-gateway", "owner": "it-devops · external", "depends_on": ["model-provider"]},
+    {"name": "model-provider", "owner": "external", "depends_on": []},
+    {"name": "hary-db", "owner": "backend-team", "depends_on": []}
+  ]
+}

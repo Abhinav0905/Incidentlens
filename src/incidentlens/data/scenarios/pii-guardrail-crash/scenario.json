@@ -1,0 +1,5 @@
+{
+  "name": "pii-guardrail-crash",
+  "title": "Hary assistant 500s on pasted text: the PII scanner raises instead of redacting",
+  "description": "Synthetic demo fixture. Minutes after a hary-ai rollout bumps the text analyser engine, a user pastes a block copied out of an external editor: an unpaired surrogate followed by four thousand combining marks. The input PII pass raises IndexError instead of handling it, the input-guardrail node re-raises, and from then on every turn carrying that same byte sequence returns HTTP 500 while well-formed messages sail through. That makes it a partial failure — chat success falls to 71.4%, not to zero — so volume and latency dashboards stay flat and only the affected sessions notice. The third-party analyser engine emits no telemetry of its own, so whether this is a library defect in the rewritten span merge or a missing input-validation step in hary.guardrails.pii is exactly the question the video hands to the on-call engineer."
+}

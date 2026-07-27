@@ -1,0 +1,7 @@
+services:
+  incidentlens:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      INCIDENTLENS_ENV: development

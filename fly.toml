@@ -1,0 +1,40 @@
+# Fly.io config — https://fly.io/docs/reference/configuration/
+#
+# Deploy:
+#   brew install flyctl
+#   fly auth login
+#   fly launch --no-deploy --copy-config --name incidentlens
+#   fly deploy
+#
+# Gives an HTTPS URL such as https://incidentlens.fly.dev
+
+app = "incidentlens"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  INCIDENTLENS_ENV = "production"
+  INCIDENTLENS_LOG_LEVEL = "INFO"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_start_machines = true
+  # Keep one machine warm. Judges click a link once; a cold start reads as a
+  # broken submission.
+  auto_stop_machines = false
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/api/v1/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  cpus = 1

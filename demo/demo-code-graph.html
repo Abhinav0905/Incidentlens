@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>IncidentLens · code network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#0e1116;--panel:#151a22;--panel2:#1b212b;--line:#263042;--text:#e6e9ef;
+--dim:#8a93a3;--accent:#8ca8da;--ok:#3fb68b;--warn:#e3a73c;--crit:#e05b4d;--rec:#52c7b8;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,'Segoe UI',sans-serif;overflow:hidden}
+#wrap{display:flex;height:100vh}
+#side{width:340px;min-width:340px;background:var(--panel);border-right:1px solid var(--line);
+display:flex;flex-direction:column;padding:14px;gap:10px;overflow-y:auto}
+h1{font-size:16px} h1 small{color:var(--dim);font-weight:400;display:block;font-size:11px;margin-top:2px}
+select,input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+padding:7px 9px;border-radius:8px;font:inherit}
+.row{display:flex;gap:8px}
+button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);padding:6px 10px;
+border-radius:8px;cursor:pointer;font:12px monospace}
+button.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+#stats{color:var(--dim);font:11px monospace}
+#legend{display:flex;flex-wrap:wrap;gap:6px;font:11px monospace;color:var(--dim)}
+.chip{display:flex;align-items:center;gap:5px}.dot{width:9px;height:9px;border-radius:50%}
+#detail{border-top:1px solid var(--line);padding-top:10px;font-size:13px}
+#detail h2{font:600 14px monospace;word-break:break-all}
+#detail .k{color:var(--dim);font:11px monospace;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.06em}
+#detail ul{list-style:none}
+#detail li{padding:4px 6px;border-radius:6px;cursor:pointer;font:12px monospace;word-break:break-all}
+#detail li:hover{background:var(--panel2)}
+#detail li span{color:var(--dim)}
+.badge{display:inline-block;padding:1px 8px;border-radius:9px;font:11px monospace;margin:2px 3px 2px 0;
+background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
+.badge.crit{color:var(--crit);border-color:var(--crit)}
+.badge.rec{color:var(--rec);border-color:var(--rec)}
+#inc{border:1px solid var(--line);border-radius:10px;padding:9px;font-size:12px;color:var(--dim)}
+#inc b{color:var(--text)}
+#stage{width:100%;height:100%;position:relative}
+canvas{display:block;cursor:grab}
+#tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line);
+color:var(--text);padding:4px 9px;border-radius:7px;font:12px monospace;display:none;z-index:3}
+</style></head><body>
+<div id="wrap">
+  <div id="side">
+    <h1>IncidentLens · code network<small id="sub"></small></h1>
+    <select id="svc"></select>
+    <input id="search" placeholder="search modules… (e.g. pii, llm, guardrail)">
+    <div class="row">
+      <button id="incbtn" style="display:none">incident overlay</button>
+      <button id="reset">reset view</button>
+    </div>
+    <div id="stats"></div>
+    <div id="legend"></div>
+    <div id="inc" style="display:none"></div>
+    <div id="detail"><div style="color:var(--dim)">Click a module to see who calls it and what it calls.</div></div>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas><div id="tip"></div></div>
+</div>
+<script>
+const DATA = {"subtitle": "hary-platform demo \u00b7 incident overlay on", "incident": {"service": "hary-ai", "failing_module": "hary.models.llm_factory", "path_modules": ["middleware.rate_limit", "main", "hary.transport.routes", "hary.guardrails.pii", "hary.graph.nodes.input_guardrail", "hary.graph.nodes.conversation_context", "hary.prompts.query_rewrite", "hary.models.llm_factory"], "title": "hary-frontend failures after hary-ai change (hary-platform)", "incident_id": "INC-20260716-e32738"}, "services": {"hary-ai": {"modules": [{"name": "main", "kind": "endpoint", "stage": "chat-endpoint", "defs": ["create_app", "setup_logging"], "loc": 88}, {"name": "middleware.rate_limit", "kind": "middleware", "stage": "rate-limit", "defs": ["RateLimitMiddleware"], "loc": 74}, {"name": "hary.transport.routes", "kind": "endpoint", "stage": "chat-endpoint", "defs": ["chat", "health"], "loc": 142}, {"name": "hary.guardrails.pii", "kind": "graph-node", "stage": "pii-scanner", "defs": ["scan", "redact"], "loc": 210}, {"name": "hary.graph.nodes.input_guardrail", "kind": "graph-node", "stage": "input-guardrail", "defs": ["InputGuardrailNode"], "loc": 168}, {"name": "hary.graph.nodes.conversation_context", "kind": "graph-node", "stage": "conversation-context", "defs": ["ConversationContextNode"], "loc": 190}, {"name": "hary.prompts.query_rewrite", "kind": "graph-node", "stage": "query-rewriter", "defs": ["rewrite_query", "REWRITE_PROMPT"], "loc": 133}, {"name": "hary.graph.nodes.router", "kind": "graph-node", "stage": "router", "defs": ["RouterNode"], "loc": 121}, {"name": "hary.graph.nodes.agent", "kind": "graph-node", "stage": "agentic", "defs": ["AgentNode"], "loc": 342}, {"name": "hary.graph.nodes.small_talk", "kind": "graph-node", "stage": "small-talk", "defs": ["SmallTalkNode"], "loc": 64}, {"name": "hary.graph.nodes.output_guardrail", "kind": "graph-node", "stage": "output-guardrail", "defs": ["OutputGuardrailNode"], "loc": 150}, {"name": "hary.models.llm_factory", "kind": "client", "stage": "llm-client", "defs": ["get_llm", "_build_gateway_llm", "_gateway_headers"], "loc": 428}, {"name": "hary.graph.builder", "kind": "module", "stage": null, "defs": ["GraphBuilder"], "loc": 285}, {"name": "hary.auth.headers", "kind": "module", "stage": null, "defs": ["gateway_headers", "basic_auth_value"], "loc": 59}, {"name": "hary.transport.http", "kind": "client", "stage": null, "defs": ["post_json"], "loc": 97}, {"name": "config.settings", "kind": "config", "stage": null, "defs": ["Settings"], "loc": 512}], "edges": [{"src": "main", "dst": "hary.transport.routes", "kind": "import", "symbols": [], "count": 1}, {"src": "main", "dst": "middleware.rate_limit", "kind": "call", "symbols": ["RateLimitMiddleware"], "count": 1}, {"src": "main", "dst": "config.settings", "kind": "call", "symbols": ["log_level"], "count": 1}, {"src": "hary.transport.routes", "dst": "hary.graph.builder", "kind": "call", "symbols": ["compile"], "count": 1}, {"src": "middleware.rate_limit", "dst": "config.settings", "kind": "call", "symbols": ["rate_limit_rpm"], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.input_guardrail", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.conversation_context", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.router", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.agent", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.small_talk", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.builder", "dst": "hary.graph.nodes.output_guardrail", "kind": "import", "symbols": [], "count": 1}, {"src": "hary.graph.nodes.input_guardrail", "dst": "hary.guardrails.pii", "kind": "call", "symbols": ["scan"], "count": 2}, {"src": "hary.graph.nodes.conversation_context", "dst": "config.settings", "kind": "call", "symbols": ["context_window"], "count": 1}, {"src": "hary.prompts.query_rewrite", "dst": "hary.models.llm_factory", "kind": "call", "symbols": ["get_llm"], "count": 2}, {"src": "hary.graph.nodes.agent", "dst": "hary.models.llm_factory", "kind": "call", "symbols": ["get_llm"], "count": 3}, {"src": "hary.graph.nodes.small_talk", "dst": "hary.models.llm_factory", "kind": "call", "symbols": ["get_llm"], "count": 1}, {"src": "hary.models.llm_factory", "dst": "config.settings", "kind": "call", "symbols": ["gateway_base_url", "gateway_virtual_key", "gateway_basic_auth"], "count": 6}, {"src": "hary.models.llm_factory", "dst": "hary.auth.headers", "kind": "call", "symbols": ["gateway_headers"], "count": 2}, {"src": "hary.models.llm_factory", "dst": "hary.transport.http", "kind": "call", "symbols": ["post_json"], "count": 2}]}}};
+const KIND_COLOR = {endpoint:'#8ca8da','graph-node':'#3fb68b',client:'#e3a73c',
+middleware:'#a78bda',config:'#52c7b8',module:'#55627e'};
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),tip=document.getElementById('tip');
+const stage=document.getElementById('stage');
+let G=null,nodes=[],links=[],byName={},sel=null,hover=null,zoom=1,ox=0,oy=0,alpha=0,
+  overlay=!!DATA.incident,query='';
+function resize(){cv.width=stage.clientWidth;cv.height=stage.clientHeight;draw();}
+window.addEventListener('resize',resize);
+
+function loadService(name){
+  G=DATA.services[name];byName={};sel=null;hover=null;query='';document.getElementById('search').value='';
+  const deg={};G.edges.forEach(e=>{deg[e.src]=(deg[e.src]||0)+1;deg[e.dst]=(deg[e.dst]||0)+1;});
+  nodes=G.modules.map((m,i)=>{const a=i/G.modules.length*6.283;
+    const r=Math.min(cv.width,cv.height)*.33*(0.55+((i*2654435761)>>>8&255)/255*.6);
+    return {...m,deg:deg[m.name]||0,x:Math.cos(a)*r,y:Math.sin(a)*r,vx:0,vy:0};});
+  nodes.forEach(n=>byName[n.name]=n);
+  links=G.edges.filter(e=>byName[e.src]&&byName[e.dst]).map(e=>({...e,a:byName[e.src],b:byName[e.dst]}));
+  document.getElementById('stats').textContent=
+    G.modules.length+' modules · '+G.edges.length+' edges ('+
+    G.edges.filter(e=>e.kind==='call').length+' resolved calls)';
+  zoom=1;ox=0;oy=0;alpha=1;detail(null);
+  const inc=DATA.incident;
+  document.getElementById('incbtn').style.display=(inc&&inc.service===name)?'':'none';
+  document.getElementById('inc').style.display=(inc&&inc.service===name&&overlay)?'':'none';
+  if(inc&&inc.service===name){document.getElementById('inc').innerHTML=
+    '<b>'+inc.title+'</b><br>'+inc.incident_id+'<br>failing module: <b style="color:var(--crit)">'
+    +(inc.failing_module||'?')+'</b>';}
+}
+function isPath(n){const i=DATA.incident;return overlay&&i&&i.service===svcSel.value&&i.path_modules.includes(n.name);}
+function isFail(n){const i=DATA.incident;return overlay&&i&&i.service===svcSel.value&&i.failing_module===n.name;}
+function neighbors(n){const s=new Set();links.forEach(l=>{if(l.a===n)s.add(l.b);if(l.b===n)s.add(l.a);});return s;}
+
+function tick(){
+  if(alpha<=0.003)return;
+  const k=alpha;
+  for(let i=0;i<nodes.length;i++){const n=nodes[i];
+    for(let j=i+1;j<nodes.length;j++){const m=nodes[j];
+      let dx=n.x-m.x,dy=n.y-m.y,d2=dx*dx+dy*dy+40;if(d2>90000)continue;
+      const f=1600/d2*k;const d=Math.sqrt(d2);dx/=d;dy/=d;
+      n.vx+=dx*f;n.vy+=dy*f;m.vx-=dx*f;m.vy-=dy*f;}}
+  links.forEach(l=>{let dx=l.b.x-l.a.x,dy=l.b.y-l.a.y;const d=Math.sqrt(dx*dx+dy*dy)+1e-3;
+    const want=70+(l.kind==='import'?36:0);const f=(d-want)*0.02*k;dx/=d;dy/=d;
+    l.a.vx+=dx*f*d*0.02;l.a.vy+=dy*f*d*0.02;l.b.vx-=dx*f*d*0.02;l.b.vy-=dy*f*d*0.02;});
+  nodes.forEach(n=>{n.vx-=n.x*0.0016*k;n.vy-=n.y*0.0016*k;
+    n.x+=n.vx=Math.max(-9,Math.min(9,n.vx*0.86));n.y+=n.vy=Math.max(-9,Math.min(9,n.vy*0.86));});
+  alpha*=0.995;
+}
+function nodeR(n){return 4+Math.min(11,Math.sqrt(n.deg)*1.9);}
+function toScreen(x,y){return [cv.width/2+(x+ox)*zoom, cv.height/2+(y+oy)*zoom];}
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(!G)return;
+  const focus=sel||hover;const nb=focus?neighbors(focus):null;
+  const q=query.toLowerCase();
+  ctx.lineWidth=1;
+  links.forEach(l=>{
+    const[a1,a2]=toScreen(l.a.x,l.a.y),[b1,b2]=toScreen(l.b.x,l.b.y);
+    let al=l.kind==='call'?0.34:0.13;
+    if(focus){al=(l.a===focus||l.b===focus)?0.75:0.05;}
+    let color='#39435a';
+    if(overlay&&isFail(l.b)&&(isPath(l.a)||true)&&l.b&&isFail(l.b)&&isPath(l.a))color='#e05b4d';
+    if(focus&&(l.a===focus||l.b===focus))color='#8ca8da';
+    ctx.strokeStyle=color;ctx.globalAlpha=al;
+    ctx.beginPath();ctx.moveTo(a1,a2);
+    ctx.quadraticCurveTo((a1+b1)/2+(a2-b2)*0.08,(a2+b2)/2+(b1-a1)*0.08,b1,b2);ctx.stroke();
+    if(focus&&(l.a===focus||l.b===focus)){
+      const t=0.82,x=a1+(b1-a1)*t,y=a2+(b2-a2)*t,ang=Math.atan2(b2-a2,b1-a1);
+      ctx.globalAlpha=0.9;ctx.fillStyle=color;ctx.beginPath();
+      ctx.moveTo(x,y);ctx.lineTo(x-8*Math.cos(ang-0.4),y-8*Math.sin(ang-0.4));
+      ctx.lineTo(x-8*Math.cos(ang+0.4),y-8*Math.sin(ang+0.4));ctx.fill();}
+  });
+  ctx.globalAlpha=1;
+  nodes.forEach(n=>{
+    const[x,y]=toScreen(n.x,n.y);const r=nodeR(n)*Math.pow(zoom,0.6);
+    const matches=q&&n.name.toLowerCase().includes(q);
+    let dim=(focus&&n!==focus&&!nb.has(n))||(q&&!matches);
+    let color=KIND_COLOR[n.kind]||KIND_COLOR.module;
+    if(overlay){if(isFail(n))color='#e05b4d';else if(isPath(n))color='#52c7b8';}
+    if(overlay&&isFail(n)){ctx.globalAlpha=0.25;ctx.fillStyle=color;
+      ctx.beginPath();ctx.arc(x,y,r+9+3*Math.sin(Date.now()/300),0,6.283);ctx.fill();}
+    ctx.globalAlpha=dim?0.16:1;
+    ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,6.283);ctx.fill();
+    if(n===sel){ctx.strokeStyle='#e6e9ef';ctx.lineWidth=2;ctx.stroke();}
+    if(overlay&&isPath(n)&&!isFail(n)){ctx.strokeStyle='#52c7b8';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(x,y,r+3,0,6.283);ctx.stroke();}
+    const showLabel=!dim&&(n.deg>=8||zoom>1.5||n===focus||(nb&&nb.has(n))||matches||isFail(n));
+    if(showLabel){ctx.globalAlpha=dim?0.3:0.92;ctx.fillStyle='#c9d1de';
+      ctx.font=(n===focus?'600 ':'')+Math.max(10,11*Math.pow(zoom,0.4))+'px monospace';
+      ctx.fillText(n.name.split('.').pop(),x+r+4,y+4);}
+  });
+  ctx.globalAlpha=1;
+}
+function loop(){tick();draw();requestAnimationFrame(loop);}
+
+function detail(n){
+  const d=document.getElementById('detail');
+  if(!n){d.innerHTML='<div style="color:var(--dim)">Click a module to see who calls it and what it calls.</div>';return;}
+  const callers=[],callees=[];
+  links.forEach(l=>{if(l.b===n)callers.push(l);if(l.a===n)callees.push(l);});
+  const li=(l,other)=>'<li data-m="'+other.name+'">'+other.name+
+    (l.symbols&&l.symbols.length?' <span>· '+l.symbols.slice(0,4).join(', ')+'</span>':'')+
+    (l.kind==='import'?' <span>(import)</span>':'')+'</li>';
+  d.innerHTML='<h2>'+n.name+'</h2>'
+    +'<span class="badge">'+n.kind+'</span>'
+    +(n.stage?'<span class="badge rec">stage: '+n.stage+'</span>':'')
+    +(isFail(n)?'<span class="badge crit">failing module</span>':'')
+    +'<span class="badge">'+n.loc+' loc</span>'
+    +(n.defs.length?'<div class="k">defines</div><div style="font:12px monospace;color:var(--dim)">'
+      +n.defs.slice(0,10).join(', ')+'</div>':'')
+    +'<div class="k">called / used by ('+callers.length+')</div><ul>'
+    +(callers.map(l=>li(l,l.a)).join('')||'<li><span>nothing internal</span></li>')+'</ul>'
+    +'<div class="k">calls / uses ('+callees.length+')</div><ul>'
+    +(callees.map(l=>li(l,l.b)).join('')||'<li><span>nothing internal</span></li>')+'</ul>';
+  d.querySelectorAll('li[data-m]').forEach(el=>el.addEventListener('click',()=>{
+    const t=byName[el.getAttribute('data-m')];if(t){sel=t;detail(t);draw();}}));
+}
+
+const svcSel=document.getElementById('svc');
+Object.keys(DATA.services).forEach(s=>{const o=document.createElement('option');o.value=s;
+  o.textContent=s+'  ('+DATA.services[s].modules.length+' modules)';svcSel.appendChild(o);});
+svcSel.addEventListener('change',()=>loadService(svcSel.value));
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value;draw();});
+document.getElementById('reset').addEventListener('click',()=>{zoom=1;ox=0;oy=0;alpha=0.6;});
+const incbtn=document.getElementById('incbtn');
+function syncInc(){incbtn.classList.toggle('on',overlay);
+  const i=DATA.incident;document.getElementById('inc').style.display=
+  (i&&i.service===svcSel.value&&overlay)?'':'none';}
+incbtn.addEventListener('click',()=>{overlay=!overlay;syncInc();draw();});
+
+let dragging=false,dragNode=null,lx=0,ly=0;
+function pick(mx,my){for(let i=nodes.length-1;i>=0;i--){const n=nodes[i];
+  const[x,y]=toScreen(n.x,n.y);const r=nodeR(n)*Math.pow(zoom,0.6)+3;
+  if((mx-x)**2+(my-y)**2<r*r)return n;}return null;}
+cv.addEventListener('mousedown',e=>{lx=e.offsetX;ly=e.offsetY;
+  dragNode=pick(e.offsetX,e.offsetY);dragging=!dragNode;cv.style.cursor='grabbing';});
+window.addEventListener('mouseup',()=>{dragging=false;dragNode=null;cv.style.cursor='grab';});
+cv.addEventListener('mousemove',e=>{
+  if(dragNode){dragNode.x+=(e.offsetX-lx)/zoom;dragNode.y+=(e.offsetY-ly)/zoom;
+    alpha=Math.max(alpha,0.12);lx=e.offsetX;ly=e.offsetY;draw();return;}
+  if(dragging){ox+=(e.offsetX-lx)/zoom;oy+=(e.offsetY-ly)/zoom;lx=e.offsetX;ly=e.offsetY;draw();return;}
+  const n=pick(e.offsetX,e.offsetY);hover=n;
+  if(n){tip.style.display='block';tip.style.left=(e.offsetX+14)+'px';tip.style.top=(e.offsetY+8)+'px';
+    tip.textContent=n.name;}else tip.style.display='none';
+  draw();});
+cv.addEventListener('click',e=>{const n=pick(e.offsetX,e.offsetY);
+  if(n){sel=n;detail(n);}else{sel=null;detail(null);}draw();});
+cv.addEventListener('wheel',e=>{e.preventDefault();
+  const f=e.deltaY<0?1.12:0.89;const nz=Math.max(0.25,Math.min(6,zoom*f));
+  const mx=e.offsetX-cv.width/2,my=e.offsetY-cv.height/2;
+  ox-=mx/zoom-mx/nz;oy-=my/zoom-my/nz;zoom=nz;draw();},{passive:false});
+
+const legend=document.getElementById('legend');
+Object.entries(KIND_COLOR).forEach(([k,c])=>{legend.innerHTML+=
+  '<span class="chip"><span class="dot" style="background:'+c+'"></span>'+k+'</span>';});
+legend.innerHTML+='<span class="chip"><span class="dot" style="background:#e05b4d"></span>failing</span>'
+  +'<span class="chip"><span class="dot" style="background:#52c7b8"></span>incident path</span>';
+document.getElementById('sub').textContent=DATA.subtitle;
+
+const first=DATA.incident&&DATA.services[DATA.incident.service]?DATA.incident.service
+  :Object.keys(DATA.services)[0];
+svcSel.value=first;resize();loadService(first);syncInc();loop();
+</script></body></html>

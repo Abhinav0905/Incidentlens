@@ -1,0 +1,5 @@
+{
+  "name": "agentic-retry-exhaustion",
+  "title": "Hary assistant silently truncating answers after a prompt-template rollout",
+  "description": "Synthetic demo fixture. A reworded tool-calling prompt template ships to hary-ai and the agent node starts receiving a function-call payload it cannot decode. AgentNode._is_retryable_llm_error treats the decode failure as retryable, so AgentNode.__call__ burns all three attempts on an error that can never succeed, then falls back to _partial_answer_result and returns a text-only prefix. Users get HTTP 200 with a plausible but truncated reply. Nothing 5xxs: success rate holds at 99.6% while agent p95 goes from 2.1 s to 6.9 s, the partial-answer salvage rate goes from 0.3% to 44.8%, and thumbs-down on the assistant panel climbs. The llm-gateway and model-provider supply no telemetry of their own, so whether the malformed payload is a model-side output regression or a defect in the new template cannot be settled from this evidence."
+}

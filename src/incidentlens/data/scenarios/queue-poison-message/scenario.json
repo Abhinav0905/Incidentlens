@@ -1,0 +1,5 @@
+{
+  "name": "queue-poison-message",
+  "title": "Notification pipeline crash-looping on one un-decodable order event",
+  "description": "Synthetic demo fixture. A producer promotes an order-event payload schema in which the 'recipient' field stops being a string and becomes a contact object. The stream consumer's decoder raises on the first such record, the worker exits and re-reads the very same offset, the dead-letter topic that should have quarantined it is not provisioned, partition backlog and consumer lag climb, notification delivery stalls and members see an empty notification history. The queue broker and the schema registry supply no telemetry of their own, so whether the producer's schema change was deliberate, reviewed or announced cannot be established from this evidence."
+}

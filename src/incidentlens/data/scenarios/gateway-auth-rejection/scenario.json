@@ -1,0 +1,5 @@
+{
+  "name": "gateway-auth-rejection",
+  "title": "Hary assistant down: LLM gateway rejecting hary-ai with 401",
+  "description": "Synthetic demo fixture. hary-ai is pointed at the shared LLM gateway with a freshly configured virtual key. Every chat completion call comes back 401 Unauthorized on both auth schemes, the circuit breaker opens, the BFF times out, and the assistant panel goes dark for users. The gateway's own logs are not available, so whether the virtual key is unprovisioned or the Basic credential is wrong stays an open question — exactly the kind the video hands to the on-call engineer."
+}

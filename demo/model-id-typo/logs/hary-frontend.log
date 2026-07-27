@@ -1,0 +1,2 @@
+2026-07-23T09:15:10Z ERROR Assistant panel request returned HTTP 502. Users see 'Hary assistant is unavailable'.
+2026-07-23T09:15:45Z ERROR Assistant panel still failing; 3 of the last 3 requests returned 502.
