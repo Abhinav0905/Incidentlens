@@ -49,16 +49,36 @@ function card(inc) {
   const el = document.createElement('article');
   el.className = 'card';
 
+  // A poster with an explicit, keyboard-reachable play affordance. Clicking a bare
+  // image is not discoverable, and on a generative-media submission the video must
+  // be obviously playable.
+  const shell = document.createElement('button');
+  shell.className = 'poster';
+  shell.type = 'button';
+  shell.setAttribute('aria-label', `Play the narrated replay for ${prettyName(inc.prefix)}`);
+
   const img = document.createElement('img');
   img.loading = 'lazy';
-  img.alt = inc.title || inc.prefix;
+  img.alt = '';
   img.src = inc.poster_url;
-  img.onclick = () => {
+
+  const cue = document.createElement('span');
+  cue.className = 'poster-play';
+  cue.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22">' +
+    '<path d="M8 5v14l11-7z" fill="currentColor"/></svg><em>Play replay</em>';
+
+  shell.append(img, cue);
+  shell.addEventListener('click', () => {
     const v = document.createElement('video');
-    v.src = inc.video_url; v.controls = true; v.autoplay = true; v.preload = 'metadata';
-    img.replaceWith(v);
-  };
-  el.appendChild(img);
+    v.src = inc.video_url;
+    v.controls = true;
+    v.autoplay = true;
+    v.preload = 'metadata';
+    v.setAttribute('playsinline', '');
+    shell.replaceWith(v);
+    v.focus();
+  });
+  el.appendChild(shell);
 
   const body = document.createElement('div');
   body.className = 'body';
@@ -120,6 +140,14 @@ function card(inc) {
     }
   };
   row.appendChild(pbtn);
+
+  const mp4 = document.createElement('a');
+  mp4.className = 'btn';
+  mp4.href = inc.video_url;
+  mp4.target = '_blank';
+  mp4.rel = 'noopener';
+  mp4.textContent = 'Open MP4';
+  row.appendChild(mp4);
 
   const links = [
     ['briefing.md', 'Briefing'],

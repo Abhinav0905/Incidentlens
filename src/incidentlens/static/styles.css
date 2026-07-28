@@ -874,3 +874,46 @@ article small {
   .intro-tech { border-radius: var(--r-lg); }
   .b2strip { grid-template-columns: 1fr; }
 }
+
+/* Poster with an explicit play affordance — a bare clickable image is neither
+   discoverable nor keyboard-reachable. */
+.poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--ground-sunk);
+  cursor: pointer;
+  line-height: 0;
+}
+.poster img { border-bottom: 0; }
+.poster-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  background: linear-gradient(to top, rgba(4, 8, 14, 0.62), rgba(4, 8, 14, 0.12));
+  font: 600 12.5px/1 var(--sans);
+  letter-spacing: 0.01em;
+  opacity: 0.92;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.poster-play em { font-style: normal; }
+.poster:hover .poster-play,
+.poster:focus-visible .poster-play {
+  opacity: 1;
+  background: linear-gradient(to top, rgba(4, 8, 14, 0.72), rgba(76, 141, 255, 0.22));
+}
+
+/* The graph needs width, but it must scroll inside its own box rather than
+   pushing the page sideways on a phone. */
+@media (max-width: 700px) {
+  #graph { min-width: 560px; }
+  #graph-wrap { -webkit-overflow-scrolling: touch; }
+  html, body { overflow-x: hidden; }
+}
