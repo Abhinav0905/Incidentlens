@@ -55,8 +55,8 @@ downloaded file and checked.
 
 Scope, stated plainly: this is a single-provider Genblaze pipeline (openai-tts),
 not multi-provider orchestration. The narration script is written by gpt-4o
-through the OpenAI SDK directly, because genblaze-openai exposes chat() as a
-module function rather than a provider — filed upstream as genblaze#224.
+through the OpenAI SDK directly, because in genblaze-openai 0.3.3 — the version
+this was built against — chat() is a module function rather than a provider.
 
 ── Models used ────────────────────────────────────
 gpt-4o             writes the narration script     (OpenAI SDK, not via Genblaze)
@@ -74,7 +74,13 @@ The demo scenarios are synthetic fixtures, labelled as such in the app. A
 candidate function is a static inference from an AST call graph, not a runtime
 stack frame, and the interface says so on screen.
 
-Upstream issues filed against the Genblaze SDK while building this:
+Three defects found while building this were reported upstream with
+reproductions, and all three were fixed by Backblaze within 24 hours:
+
+#223 estimate_cost() always returned None    -> PR #230, genblaze-openai 0.3.4
+#224 Pipeline.step() accepted a non-provider -> PR #231, genblaze-core 0.3.8
+#225 Mp4Handler.extract() mislabelled a type -> PR #231, genblaze-core 0.3.8
+
 https://github.com/backblaze-labs/genblaze/issues/223
 https://github.com/backblaze-labs/genblaze/issues/224
 https://github.com/backblaze-labs/genblaze/issues/225

@@ -107,11 +107,28 @@ a downloaded file and it still checks out.
 **Scope, stated plainly.** This is a single-provider, single-modality Genblaze
 pipeline: `openai-tts` for audio, plus the non-generative ingest step. It is not
 multi-provider orchestration. The narration *script* is written by `gpt-4o`
-through the OpenAI SDK **directly, not through Genblaze**, because
-`genblaze-openai` exposes `chat()` as a module function rather than a
-`BaseProvider`, so a text step cannot currently participate in a Pipeline. That
-gap is filed as
-[genblaze#224](https://github.com/backblaze-labs/genblaze/issues/224).
+through the OpenAI SDK **directly, not through Genblaze**, because in
+`genblaze-openai` 0.3.3 — the version this was built and tested against —
+`chat()` is a module function rather than a `BaseProvider`, so a text step could
+not participate in a Pipeline.
+
+---
+
+## Upstream contributions
+
+Three defects found while building this were reported with reproductions, and
+**all three were fixed by Backblaze within 24 hours**:
+
+| Issue | What it was | Fixed by |
+| --- | --- | --- |
+| [#223](https://github.com/backblaze-labs/genblaze/issues/223) | Every `ModelSpec` in `genblaze-openai` left `pricing=None`, so `estimate_cost()` could only ever return `None` for all 11 models | [PR #230](https://github.com/backblaze-labs/genblaze/pull/230) → `genblaze-openai` 0.3.4 |
+| [#224](https://github.com/backblaze-labs/genblaze/issues/224) | `Pipeline.step()` silently accepted a non-provider and died later with `AttributeError`; no `BaseProvider` existed for `Modality.TEXT` | [PR #231](https://github.com/backblaze-labs/genblaze/pull/231) → `genblaze-core` 0.3.8 |
+| [#225](https://github.com/backblaze-labs/genblaze/issues/225) | `Mp4Handler.extract()` reported a caller type error as `EmbeddingError`, i.e. as media corruption | [PR #231](https://github.com/backblaze-labs/genblaze/pull/231) → `genblaze-core` 0.3.8 |
+
+Each was reproduced against the then-current published packages before filing,
+with the root cause identified rather than just the symptom. This submission
+remains on the versions it was tested against; the fixes are in the releases
+above.
 
 ---
 
@@ -165,10 +182,9 @@ The reconstruction engine and renderer predate the submission period. Built
   catalog, lifecycle defaults, Object Lock, and the read-back API and gallery.
 - The visitor sandbox (paste-your-own-logs and describe-an-incident).
 - The one-platform, four-failure scenario series.
-- Three upstream issues filed against the SDK:
-  [#223](https://github.com/backblaze-labs/genblaze/issues/223),
-  [#224](https://github.com/backblaze-labs/genblaze/issues/224),
-  [#225](https://github.com/backblaze-labs/genblaze/issues/225).
+- Three defects reported upstream with reproductions — **all three fixed by
+  Backblaze within 24 hours**, shipping in `genblaze-core` 0.3.8 and
+  `genblaze-openai` 0.3.4. See "Upstream contributions" above.
 
 ---
 
